@@ -129,7 +129,7 @@
 		
 		function commentslist(){
 			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Просмотр коментариев блога",
+							'title' => "Samoilovi.ru | Просмотр коментариев блога",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url(),
@@ -158,7 +158,7 @@
 		
 		function friends(){
 			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Страница друзей",
+							'title' => "Samoilovi.ru | Страница друзей",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url(),

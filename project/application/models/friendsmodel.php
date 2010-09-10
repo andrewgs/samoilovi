@@ -32,8 +32,11 @@
 			$this->fr_name = $data['name'];
 			$this->fr_profession = $data['profession'];
 			$this->fr_social = $social;
-			$this->fr_note = $data['note'];
 			$this->fr_image = $data['userfile'];
+			$this->fr_note = $data['note'];
+			
+			if (strlen($this->fr_note) > 450)
+				$this->fr_note = substr($this->fr_note,0,450);				
 			
 			$this->db->insert('friends', $this);
 			$id = $this->db->insert_id();
@@ -54,6 +57,9 @@
 			$this->fr_social = $social;
 			$this->fr_note = $data['note'];
 			$this->fr_image = $data['userfile'];
+			
+			if (strlen($this->fr_note) > 450)
+				$this->fr_note = substr($this->fr_note,0,450);
 			
 			$this->db->where('fr_id',$this->fr_id);
 			$this->db->update('friends', $this);

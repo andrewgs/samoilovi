@@ -38,7 +38,7 @@
 		</div>
 		<div class="container_12">
 			<div id="internal_nav" class="grid_4 suffix_8">
-				<a href="<?php echo $data1['baseurl'].'admin'; ?>">&laquo; Отменить авторизацию</a>
+				<a href="<?php echo $data1['baseurl'].'admin'; ?>">&laquo; Вернуться назад</a>
 			</div>
 		</div>
 		<div class="clear"></div>

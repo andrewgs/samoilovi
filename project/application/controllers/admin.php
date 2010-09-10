@@ -282,7 +282,7 @@
 		function login(){
 		
 			$data1 = array(
-						'title' => "Samoilovi.ru | Аутентификация пользователя",
+						'title' => "Samoilovi.ru | Администрирование | Аутентификация пользователя",
 						'desc' => "\"\"",
 						'keyword' => "\"\"",
 						'baseurl' => base_url(),
@@ -379,7 +379,7 @@
 			
 			if ($this->form_validation->run() == FALSE){
 				$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Создание нового фотоальбома",
+							'title' => "Samoilovi.ru  | Создание нового фотоальбома",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url()
@@ -661,13 +661,13 @@
 		
 		function friendnew(){
 			
-			$data1 = array(
+			$pagevalue = array(
 							'title' => "Samoilovi.ru | Администрирование | Добавление карточки друга",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url()
 						);
-			$this->load->view('friend_new',array('data1'=>$data1,'data2' => array('name'=>'Имя друга','profession'=>'Профессия','social1'=>'Соц. сеть','hrefsocial1'=>'Ссылка на страницу','social2'=>'Соц. сеть','hrefsocial2'=>'Ссылка на страницу','note'=>'Описание друга')));
+			$this->load->view('friend_new',array('pagevalue'=>$pagevalue));
 			$this->load->view('footer');
 		}
 		
@@ -681,14 +681,7 @@
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
 			
 			if ($this->form_validation->run() == FALSE){
-				$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Добавление карточки друга",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-				$this->load->view('friend_new',array('data1'=>$data1,'data2'=>$_POST));
-				$this->load->view('footer');
+				$this->friendnew();
 				return FALSE;
 			}
 			
@@ -779,27 +772,27 @@
 		function friendedit(){
 			
 			$id = $this->uri->segment(3);
-			$data1 = array(
+			$pagevalue = array(
 							'title' => "Samoilovi.ru | Администрирование | Редактирование карточки друга",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url(),
 							'basepath' => getcwd()
 						);
-			$data2 = $this->friendsmodel->get_friend_info($id);
-			$data3 = $this->socialmodel->get_friend_social_info($id);
+			$friendinfo = $this->friendsmodel->get_friend_info($id);
+			$socinfo = $this->socialmodel->get_friend_social_info($id);
 			
 			$sociallist[0] = array('id' => 0, 'social' => '', 'href' => '');
 			$sociallist[1] = array('id' => 0, 'social' => '', 'href' => '');			
 			$i = 0;			
-			foreach ($data3 as $social){
+			foreach ($socinfo as $social){
 				
 				$sociallist[$i]['id'] = $social->soc_id;
 				$sociallist[$i]['social'] = $social->soc_name;
 				$sociallist[$i]['href'] = $social->soc_href;
 				$i +=1;
 			}			
-			$this->load->view('friend_edit',array('data1' => $data1, 'data2' => $data2, 'data3' => $sociallist));
+			$this->load->view('friend_edit',array('pagevalue'=>$pagevalue,'friendinfo'=>$friendinfo,'sociallist' => $sociallist));
 			$this->load->view('footer');
 		}
 		
@@ -810,6 +803,7 @@
 				redirect('admin/friendedit/'.$_POST['fr_id']);
 				return FALSE;
 			}
+			echo strlen($_POST['note']); exit();
 			
 			$config['upload_path'] = getcwd().'/images';
 			$config['allowed_types'] = 'gif|jpg|png';
@@ -972,7 +966,7 @@
 		function profile(){
 			
 			$data1 = array(
-							'title' => "СК Стройковъ | Администрирование | Редактирование профиля",
+							'title' => "Samoilovi.ru | Администрирование | Редактирование профиля",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url(),
@@ -1022,7 +1016,7 @@
 
 		function imageslist(){
 			
-			$data1 = array(
+			$pagevalue = array(
 							'title' => "Samoilovi.ru | Администрирование | Просмотр фотографий",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
@@ -1031,10 +1025,10 @@
 						);
 			$alb_id = $this->uri->segment(3);
 			
-			$data2 = array();
-			$data2 = $this->imagesmodel->get_data($alb_id);
+			$images = array();
+			$images = $this->imagesmodel->get_data($alb_id);
 			
-			$this->load->view('photo_list',array('data1'=>$data1,'data2'=>$data2,'data3'=>$alb_id));
+			$this->load->view('photo_list',array('pagevalue'=>$pagevalue,'images'=>$images,'album'=>$alb_id));
 			$this->load->view('footer');	
 		}
 		

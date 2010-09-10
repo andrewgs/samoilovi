@@ -6,44 +6,48 @@
         <meta http-equiv="Cache-Control" content="no-cache"/> 
         <meta http-equiv="Expires" content="1 Jan 2000 0:00:00 GMT"/> 
 		<meta name="language" content="ru" /> 
-        <meta name="description" content=<?php echo $data1['desc'] ?>/>
-        <meta name="keywords" content=<?php echo $data1['keyword'] ?>/>
-        <title><?php echo $data1['title'] ?></title> 
+        <meta name="description" content=<?php echo $pagevalue['desc'] ?>/>
+        <meta name="keywords" content=<?php echo $pagevalue['keyword'] ?>/>
+        <title><?php echo $pagevalue['title'] ?></title> 
         	
 		<?php	
-		echo '<link rel="stylesheet" href="'.$data1['baseurl'].'css/reset.css" type="text/css" media="screen"/>'; 
-		echo '<link rel="stylesheet" href="'.$data1['baseurl'].'css/960.css" type="text/css" media="screen"/>'; 
-		echo '<link rel="stylesheet" href="'.$data1['baseurl'].'css/style.css" type="text/css" media="screen"/>'; 
+		echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/reset.css" type="text/css" media="screen"/>'; 
+		echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" media="screen"/>'; 
+		echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css" media="screen"/>'; 
 		
-		echo '<script type="text/javascript" src="'.$data1['baseurl'].'js/jquery.min.js"></script>';
+		echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>';
+		echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.maxlength-min.js"></script>';
 		?> 
 		<script type="text/javascript"> 
-			$(function(){
-				$("div.blog-content").each(function(){
-					$(this).parents("div.blog-center:first").css('height', $(this).height()+10);
+			$(document).ready(function(){
+				$('#friendnote').maxlength({
+					maxCharacters: 230,
+					status: true,  
+					statusText: " символов осталось.",
+					slider: true
 				});
-				
-				$(".textfield").click(function(){
-					if(this.value=="Имя друга" || this.value=="Соц. сеть" || this.value=="Профессия" || this.value=="Ссылка на страницу" || this.value=="Описание друга")
-						 this.value="";
+				$("div.blog-content").each(function(){
+					$(this).parents("div.blog-center:first").css('height', $(this).height()+15);
 				});
 			});
-		</script>  	
+		</script>	
 </head>
 <body>
    <div id="main-wrap">
 		<div id="header">
 			<div class="container_16">
 				<div id="logo" class="grid_4 suffix_5">
-					<a href="<? echo $data1['baseurl'].'admin'; ?>">Администрирование</a>
+					<a href="<? echo $pagevalue['baseurl'].'admin'; ?>">Администрирование</a>
 				</div>
-				<div class="grid_7"></div>	
+				<div id="global_nav" class="grid_7">
+					<a class="logout" href="<?php echo $pagevalue['baseurl'].'admin/logoff'; ?>">Завершить сеанс</a>
+				</div>
 			</div>
 			<div class="clear"></div>
 		</div>
 			<div class="container_12">
 				<div id="internal_nav" class="grid_4 suffix_8">
-					<a href="<?php echo $data1['baseurl'].'admin/friendsview'; ?>">&laquo; Вернуться к списку друзей</a>
+					<a href="<?php echo $pagevalue['baseurl'].'admin/friendsview'; ?>">&laquo; Вернуться к списку друзей</a>
 				</div>
 			</div>
 			<div class="container_16">
@@ -62,29 +66,32 @@
 					<div class="blog-center"> 
 						<div class="blog-l"> </div>
 						<div class="blog-content">
-							<div class="post-header">
+							<div class="post-header-friend">
 								<div class="post-title">
 								<?php
 									$attr = array('name' => 'formfriendnew','id' => 'formfriend');
 									echo form_open_multipart('admin/friendinsert',$attr);
+										echo '<div>'.form_label('Имя друга: &nbsp;&nbsp;','friendlabel');
 										$attr = array(
 													'name' => 'name',
               										'id'   => 'friendname',
-              										'value'=> $data2['name'],
+              										'value'=> set_value('name'),
 													'class'=> 'textfield',
               									'maxlength'=> '40',
               										'size' => '25'
 										);
-										echo '<div>'.form_input($attr);
+										echo form_input($attr).'</div>';
+										echo '<div>'.form_label('Профессия: ','friendlabel');
 										$attr = array(
 													'name' => 'profession',
               										'id'   => 'friendprof',
-              										'value'=> $data2['profession'],
+              										'value'=> set_value('profession'),
 													'class'=> 'textfield',
               									'maxlength'=> '50',
               										'size' => '25'
 										);
 										echo form_input($attr);
+										echo form_label('Фото ','friendlabel');
 										$attr = array(
 													'type' => 'file',
 													'name' => 'userfile',
@@ -94,57 +101,66 @@
               										'size' => '15'
 										);
 										echo form_input($attr).'</div>';
-										
+								?>
+								</div>
+							</div>
+							<div class="post-header-friend">
+								<div class="post-title">
+									<?php
+										echo '<div>'.form_label('Соц.сеть:  ','friendlabel');
 										$attr = array(
 													'name' => 'social1',
               										'id'   => 'friendsocial1',
-              										'value'=> $data2['social1'],
+              										'value'=> set_value('social1'),
 													'class'=> 'textfield',
               									'maxlength'=> '40',
-              										'size' => '15'
+              										'size' => '25'
 										);
-										echo '<div>'.form_input($attr);
+										echo form_input($attr);
+										echo form_label('Ссылка:  ','friendlabel');
 										$attr = array(
 													'name' => 'hrefsocial1',
               										'id'   => 'friendhrefsoc1',
-              										'value'=> $data2['hrefsocial1'],
+              										'value'=> set_value('hrefsocial1'),
 													'class'=> 'textfield',
               									'maxlength'=> '50',
-              										'size' => '25'
+              										'size' => '40'
 										);
-										echo form_input($attr);
-										
+										echo form_input($attr).'</div>';
+										echo '<div>'.form_label('Соц.сеть:  ','friendlabel');
 										$attr = array(
 													'name' => 'social2',
               										'id'   => 'friendsocial2',
-              										'value'=> $data2['social2'],
+              										'value'=> set_value('social2'),
 													'class'=> 'textfield',
               									'maxlength'=> '40',
-              										'size' => '15'
+              										'size' => '25'
 										);
 										echo form_input($attr);
+										echo form_label('Ссылка:  ','friendlabel');
 										$attr = array(
 													'name' => 'hrefsocial2',
               										'id'   => 'friendhrefsoc2',
-              										'value'=> $data2['hrefsocial2'],
+              										'value'=> set_value('hrefsocial2'),
 													'class'=> 'textfield',
               									'maxlength'=> '50',
-              										'size' => '25'
+              										'size' => '40'
 										);
 										echo form_input($attr).'</div>';
-								?>
-								<a name="wedding_waltz"></a></div>
-								<div class="post-date"></div>
+									?>
+								</div>
 							</div>
 							<div class="text">
 							<?php
+								echo '<div class="post-title">'.form_label('Описание друга:  ','friendlabel').'</div>';
 								$attr =array(
-											'name' => 'note',
-              								'id'   => 'friendnote',
-              								'value'=> $data2['note'],
-											'class'=> 'textfield',
-              								 'cols'=> '81',
-              								'rows' => '10'
+											'name' 		=> 'note',
+              								'id'   		=> 'friendnote',
+              								'value'		=> set_value('note'),
+											'class'		=> 'textfield',
+              								'cols'		=> '81',
+              								'rows' 		=> '6',
+											'onkeypress'=> 'return isNotMax(event)'
 								);
 								echo '<div>'.form_textarea($attr).'</div>';
 								$attr =array(
@@ -154,15 +170,6 @@
 											'class' => 'senden'
 								);
 								echo form_submit($attr);
-							/*	$attr =array(
-									'name' 		=> 'btcancel',
-									'id'   		=> 'btcancel',
-									'value'		=> 'Отмена',
-									'class'		=> 'senden',
-									'type'		=> 'button',
-									'onclick'	=> 'history.go(-1)'
-								);
-								echo form_input($attr);*/
 								echo form_close(); 
 							?>
 							</div>
