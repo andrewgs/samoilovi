@@ -803,7 +803,6 @@
 				redirect('admin/friendedit/'.$_POST['fr_id']);
 				return FALSE;
 			}
-			echo strlen($_POST['note']); exit();
 			
 			$config['upload_path'] = getcwd().'/images';
 			$config['allowed_types'] = 'gif|jpg|png';
