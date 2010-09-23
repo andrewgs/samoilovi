@@ -66,11 +66,12 @@
 				$blog->blg_date = $this->operation_date($blog->blg_date);
 				
 				$blog->blg_text = strip_tags($blog->blg_text);
-				if (strlen($blog->blg_text) > 450){									
-					$blog->blg_text = substr($blog->blg_text,0,450);				
-					$pos = strrpos($blog->blg_text,' ');
-					$blog->blg_text = substr($blog->blg_text,0,$pos);
-				}
+				
+				if (mb_strlen($blog->blg_text,'UTF-8') > 300):									
+					$blog->blg_text = mb_substr($blog->blg_text,0,300,'UTF-8');	
+					$pos = mb_strrpos($blog->blg_text,' ',0,'UTF-8');
+					$blog->blg_text = mb_substr($blog->blg_text,0,$pos,'UTF-8');
+				endif;
 			}
 			$this->load->view('index',array('data1' => $data1,'data2'=>$data2));
 			$this->load->view('footer');

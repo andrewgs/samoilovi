@@ -89,7 +89,7 @@
 				<div class="grid_4">
 				<?php
 					echo '<h2>'.$blog->blg_date.'</h2>';
-					echo '<p>'.$blog->blg_text.'... '.anchor('commentslist/'.$blog->blg_id,'Читать далее').'</p>';					?>
+					echo '<p>'.$blog->blg_text.'... <br />'.anchor('commentslist/'.$blog->blg_id,'Читать далее').'</p>';					?>
 				</div>
 				<?php
 				}
