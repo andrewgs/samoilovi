@@ -358,54 +358,35 @@
 		
 		function albumnew(){
 			
-			$data1 = array(
+			$pagevalue = array(
 							'title' => "Samoilovi.ru | Администрирование | Создание нового фотоальбома",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url()
 						);
-			$this->load->view('album_new',array('data1'=>$data1,'data2' => array('name'=>'default','title'=>'Название','photo_title'=>'Подпись к фотографиям','annotation'=>'Описание альбома')));
+			$this->load->view('album_new',array('pagevalue'=>$pagevalue));
 			$this->load->view('footer');
 		}
 		
 		function albuminsert(){			
 			
-			$this->form_validation->set_rules('name', '"Каталог альбома"', 'required');
+			$this->form_validation->set_rules('name', '"Каталог альбома"', 'required|callback_albumname_check');
 			$this->form_validation->set_rules('title', '"Название"', 'required');
-			$this->form_validation->set_rules('photo_title', '"Подпись к фотографиям"', 'required');
+			$this->form_validation->set_rules('photo_title', '"Подпись"', 'required');
 			$this->form_validation->set_rules('annotation', '"Описание альбома"', 'required');
 			
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
 			
 			if ($this->form_validation->run() == FALSE){
-				$data1 = array(
-							'title' => "Samoilovi.ru  | Создание нового фотоальбома",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-				$this->load->view('album_new',array('data1'=>$data1,'data2'=>$_POST));
+				$this->albumnew();
 				$this->load->view('footer');
 				return FALSE;
 			}
-			$this->setmessage('','','',0);
-			
-			if ($_POST['name']=='') $_POST['name']= 'default';
-			
 			$uploaddirpath = getcwd().'/images';
 			
 			$albumdir = getcwd().'/albums/'.$_POST['name'];
-			if (!is_dir($albumdir)){
-				if(!mkdir($albumdir)){
-				
-					echo '<h1> Ошибка при созднании каталога '.$albumdir.'</h1>';
-					return FALSE;
-				}
-			}else{
-				
-				echo '<h1> Такой альбом уже существует!!! '.$_POST['name'].'</h1>';
-				return FALSE;
-			}
+			mkdir($albumdir) or die('Не возможно создать каталог!'); 
+			
 			$config['upload_path'] = $uploaddirpath;
 			$config['allowed_types'] = 'gif|jpg|png';
 			$config['remove_spaces'] = TRUE;
@@ -435,11 +416,18 @@
 				$_POST['userfile'] = 'images/albumempty.png';	
 			}		
 							
-			if($_POST['title']=='') $_POST['title'] = 'Без названия';
-			if($_POST['annotation']=='') $_POST['annotation'] = 'Описание не указано';			
-			
 			$this->albummodel->insert_record_to_album($_POST);
 			redirect('admin/albumsview');	
+		}
+		
+		function albumname_check($name){
+			
+			$albumdir = getcwd().'/albums/'.$name;
+			if (is_dir($albumdir)){
+				$this->form_validation->set_message('albumname_check', 'Каталог альбома уже существует.');
+				return FALSE;
+			}else
+				return TRUE;
 		}
 		
 		function albumdestroy(){
@@ -476,19 +464,22 @@
 		}
 		
 		function albumedit(){
-			$data1 = array(
+			$pagevalue = array(
 							'title' => "Samoilovi.ru | Администрирование | Редактирование альбома",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
 							'baseurl' => base_url()
 						);
 			$id = $this->uri->segment(3);
-			$data2 = $this->albummodel->get_album_info($id);
-			foreach ($data2 as $album){
+			$albuminfo = $this->albummodel->get_album_info($id);
+			foreach ($albuminfo as $album){
 				$oldphoto = $album->alb_photo;	
 			}
-			
-        	$this->load->view('album_edit',array('data1' => $data1,'data2' => $data2, 'data3' => $oldphoto));
+        	$this->load->view('album_edit',array(
+											'pagevalue'=>$pagevalue,
+											'albuminfo'=>$albuminfo,
+											'oldphoto'=>$oldphoto
+											));
 			$this->load->view('footer');	
 		}
 		
@@ -1051,6 +1042,10 @@
 			$this->albummodel->decrement_amt_to_album($alb_id);
 			
 			redirect($redirect);
+		}
+
+		function uploadify(){
+			
 		}
 	}
 ?>

@@ -8,16 +8,19 @@
 		var $usr_second_name = '';
 		var $usr_email = '';
 		var $usr_password = '';
+		var $usr_pass_crypt = '';
 		
 		function Authentication(){			
 			
 			parent::Model();
 		}
 		
-		function get_users_info($login){
+		function user_info($login){
 			$this->db->where('usr_login',$login);
-			$query = $this->db->get('users');
-			return $query->result();
+			$query = $this->db->get('users',1);
+			$data = $query->result_array();
+			if(isset($data[0])) return $data[0];
+			return NULL;
 		}
 		
 		function changepassword($data){

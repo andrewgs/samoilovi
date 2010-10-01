@@ -1,279 +1,274 @@
 <?php
 
-	class Home extends Controller{
+class Home extends Controller{
 	
-		var $usrinfo = array(
-						'firstname' => '',
-						'secondname' => '',
-						'email' => '',
-						'adminlogin' => 0
-						);
+	var $usrinfo = array(
+					'firstname' 	=> '',
+					'secondname' 	=> '',
+					'email' 		=> '',
+					'status' 		=> FALSE
+					);
 						
-		var $months = array("01"=>"января",
-							"02"=>"февраля",
-							"03"=>"марта",
-							"04"=>"апреля",
-							"05"=>"мая",
-							"06"=>"июня",
-							"07"=>"июля",
-							"08"=>"августа",
-							"09"=>"сентября",
-							"10"=>"октября",
-							"11"=>"ноября",
-							"12"=>"декабря"
-						);
-						
-		function Home(){
-			parent::Controller();
-			$this->load->helper('url');
-			$this->load->helper('form');
-			$this->load->model('blogmodel');
-			$this->load->model('cmntmodel');
-			$this->load->model('authentication');
-			$this->load->model('albummodel');
-			$this->load->model('friendsmodel');
-			$this->load->model('socialmodel');
-			$this->load->model('imagesmodel');
-			$this->load->library('session');
-			$this->load->library('pagination');
-			if ($this->session->userdata('logon') == '76f1847d0a99a57987156534634a1acf'){
-				$this->usrinfo['adminlogin'] = 1;
-				
-				$userinfo = $this->authentication->get_users_info('admin');
-				foreach($userinfo as $value){
-					$this->usrinfo['firstname'] = $value->usr_first_name;
-					$this->usrinfo['secondname'] = $value->usr_second_name;
-					$this->usrinfo['email'] = $value->usr_email;
-				}
-			}else{
-				$this->usrinfo['adminlogin'] = 0;
-			}
-				
-				
-		}
+	var $months = array("01"=>"января", "02"=>"февраля",
+						"03"=>"марта",	"04"=>"апреля",
+						"05"=>"мая",	"06"=>"июня",
+						"07"=>"июля",	"08"=>"августа",
+						"09"=>"сентября", "10"=>"октября",
+						"11"=>"ноября",	"12"=>"декабря"
+					);
+					
+	function Home(){
+	
+		parent::Controller();
 		
-		function index(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Интернет посольство семьи Самойловых",
-							'desc' => "\"веб-сайт семьи Самойловых\"",
-							'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
-							'baseurl' => base_url(),
-							'islogin' => $this->usrinfo['adminlogin']							
-						);
-			$data2 = $this->blogmodel->get_blog_records_to_news();
-			foreach ($data2 as $blog){
-				
-				$blog->blg_date = $this->operation_date($blog->blg_date);
-				
-				$blog->blg_text = strip_tags($blog->blg_text);
-				
-				if (mb_strlen($blog->blg_text,'UTF-8') > 300):									
-					$blog->blg_text = mb_substr($blog->blg_text,0,300,'UTF-8');	
-					$pos = mb_strrpos($blog->blg_text,' ',0,'UTF-8');
-					$blog->blg_text = mb_substr($blog->blg_text,0,$pos,'UTF-8');
-				endif;
-			}
-			$this->load->view('index',array('data1' => $data1,'data2'=>$data2));
-			$this->load->view('footer');
-		}
+		$this->load->model('eventsmodel');
+		$this->load->model('commentsmodel');
+		$this->load->model('authentication');
+		$this->load->model('albummodel');
+		$this->load->model('friendsmodel');
+		$this->load->model('socialmodel');
+		$this->load->model('imagesmodel');
+		if($this->session->userdata('logon') == '76f1847d0a99a57987156534634a1acf'):
+			$this->usrinfo['adminlogin'] = 1;			
+			$userinfo = $this->authentication->user_info('admin');
+			$this->usrinfo['firstname']		= $userinfo['usr_first_name'];
+			$this->usrinfo['secondname'] 	= $userinfo['usr_second_name'];
+			$this->usrinfo['email'] 		= $userinfo['usr_email'];
+		else:
+			$this->usrinfo['status'] = TRUE;
+		endif;
+	}
+	
+	function index(){
+	
+		$pagevalue = array(
+						'title' 	=> "Samoilovi.ru | Интернет посольство семьи Самойловых",
+						'desc' 		=> "\"веб-сайт семьи Самойловых\"",
+						'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
+						'baseurl' 	=> base_url(),
+						'admin' 	=> $this->usrinfo['status']							
+					);
+		$this->session->set_userdata('backpage','');
 		
-		function photos(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Фоторепортажи",
-							'desc' => "\"веб-сайт семьи Самойловых\"",
-							'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd(),
-							'islogin' => $this->usrinfo['adminlogin']
-						);
-			$data2 = $this->albummodel->get_albums_info_list();	 
-			$this->load->view('photos',array('data1' => $data1,'data2' => $data2));
-			$this->load->view('footer');
-		}
+		$units = $this->eventsmodel->new_entries(3);
+		for($i = 0;$i < 3; $i++):
+			$units[$i]['id'] = $units[$i]['evnt_id'];
+			$units[$i]['date'] = $this->operation_date($units[$i]['evnt_date']);				
+			$units[$i]['text'] = strip_tags($units[$i]['evnt_text']);				
+			if(mb_strlen($units[$i]['text'],'UTF-8') > 350):									
+				$units[$i]['text'] = mb_substr($units[$i]['text'],0,350,'UTF-8');	
+				$pos = mb_strrpos($units[$i]['text'],'.',0,'UTF-8');
+				$units[$i]['text'] = mb_substr($units[$i]['text'],0,$pos,'UTF-8');
+				$units[$i]['text'] .= '. ...';
+			endif;
+		endfor;
 		
-		function blog(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | События в нашей жизни",
-							'desc' => "\"веб-сайт семьи Самойловых\"",
-							'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
-							'baseurl' => base_url(),
-							'islogin' => $this->usrinfo['adminlogin']
-						);
-						
-			$data3 = $this->blogmodel->count_records();			
-						
-			$config['base_url'] = base_url().'/blog';	 				// путь к страницам в пейджере
-        	$config['total_rows'] = $data3; 							// всего записей
-        	$config['per_page'] =  5;   								// количество записей на странице
-        	$config['num_links'] = 2;   	 							// количество ссылок в пейджере
-        	$config['uri_segment'] = 2;									// указываем где в URL номер страницы
-			$config['first_link'] = 'В начало';
-			$config['last_link'] = 'В конец';
-			$config['next_link'] = 'Далее &raquo;';
-			$config['prev_link'] = '&laquo; Назад';
-			$config['cur_tag_open'] = '<b>';
-			$config['cur_tag_close'] = '</b>';
-						
-			$from = intval($this->uri->segment(2));			
-			$data2['query'] = $this->blogmodel->get_blog_limit_records(5,$from);
+		$this->load->view('index',array('pagevalue'=>$pagevalue,'units'=>$units));
+	}
+	
+	function albums(){
+		$pagevalue = array(
+					'title' => "Samoilovi.ru | Фоторепортажи",
+					'desc' => "\"веб-сайт семьи Самойловых\"",
+					'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
+					'baseurl' => base_url(),
+					'basepath' => getcwd(),
+					'admin' => $this->usrinfo['status']
+				);
+		$this->session->set_userdata('backpage','photo-albums');
+		$albums = array();
+		$albums = $this->albummodel->albums_list();	 
+		$this->load->view('albums',array('pagevalue'=>$pagevalue,'albums'=>$albums));
+	}
 			
-			foreach ($data2['query'] as $data){
-				
-				$data->blg_date = $this->operation_date($data->blg_date);
-			}			
-			$this->pagination->initialize($config);
-			$data2['pager'] = $this->pagination->create_links();
-				
-			$this->load->view('blog',array('data1' => $data1, 'data2' => $data2,'data3' => $data3));
-			$this->load->view('footer');
-		}
+	function events(){
+	
+		$pagevalue = array(
+						'title' => "Samoilovi.ru | События в нашей жизни",
+						'desc' => "\"веб-сайт семьи Самойловых\"",
+						'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
+						'baseurl' => base_url(),
+						'admin' => $this->usrinfo['status']
+					);
+		$this->session->set_userdata('backpage','events');
+		$events = array();
 		
-		function commentslist(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Просмотр коментариев блога",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'islogin' => $this->usrinfo['adminlogin']
-						);
-			$id = $this->uri->segment(2);
-			$data2 = $this->blogmodel->get_blog_record($id);			
-			foreach ($data2 as $data){
-				
-				$data->blg_date = $this->operation_date($data->blg_date);
-			}
+		$count = $this->eventsmodel->count_records();			
+		$config['base_url'] 		= base_url().'/events';
+        $config['total_rows'] 		= $count; 
+        $config['per_page'] 		= 5;
+        $config['num_links'] 		= 2;
+        $config['uri_segment'] 		= 2;
+		$config['first_link']		= 'В начало';
+		$config['last_link'] 		= 'В конец';
+		$config['next_link'] 		= 'Далее &raquo;';
+		$config['prev_link'] 		= '&laquo; Назад';
+		$config['cur_tag_open']		= '<b>';
+		$config['cur_tag_close'] 	= '</b>';
+					
+		$from = intval($this->uri->segment(2));
+		if(isset($from) and !empty($from))
+			$this->session->set_userdata('backpage','events/'.$from);
 			
-			$data3 = $this->cmntmodel->get_comments_to_blog($id);
-			foreach ($data3 as $data){
-				
-				$data->cmnt_usr_date = $this->operation_date_slash($data->cmnt_usr_date);
-			}
-			if ($data1['islogin'] == 1){
-				$this->load->view('comments',array('data1'=>$data1,'data2'=>$data2,'data3'=>$data3,'data4'=>$this->usrinfo));	
-			}else{
-				$this->load->view('comments',array('data1'=>$data1,'data2'=>$data2,'data3'=>$data3));
-			}
-			
-			$this->load->view('footer');
-		}
+		$events = $this->eventsmodel->events_limit(5,$from);
 		
-		function friends(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Страница друзей",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd(),
-							'islogin' => $this->usrinfo['adminlogin']
-						);
-			$data2 = $this->friendsmodel->get_friends_info_list();
-			$data3 = $this->socialmodel->get_friend_social_info_list();
-			
-			$i = 0; $y = 0; $key = 0;
-			$data4[$i][$y] = array(
-								'id' => 0,
-							  'name' => '',
-						'profession' => '',
-						    'social' => 0,
-							  'note' => '',
-							 'image' => ''
-								);
-			foreach ($data2 as $friends){
-				
-				$key += 1;				
-				$data4[$i][$y]['id'] = $friends->fr_id;
-				$data4[$i][$y]['name'] = $friends->fr_name;
-				$data4[$i][$y]['profession'] = $friends->fr_profession;
-				$data4[$i][$y]['social'] = $friends->fr_social;
-				$data4[$i][$y]['note'] = $friends->fr_note;
-				$data4[$i][$y]['image'] = $friends->fr_image;
-				
-				if ($key % 3 == 0){
-					$i += 1;
-					$y = 0;
-				}else{
-					$y += 1;	
-				}
-			}
-			$this->load->view('friends',array(
-												'data1' => $data1,
-												'data2' => $data4,
-												'data3' => $data3,
-												'data4' => $key
-												));
-			$this->load->view('footer');
-		}
-		
-		function about(){
-			$data = array(
-							'title' => "Samoilovi.ru | О нас",
-							'desc' => "\"веб-сайт семьи Самойловых\"",
-							'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
-							'baseurl' => base_url(),
-							'islogin' => $this->usrinfo['adminlogin']
-						);	
-			$this->load->view('about',array('data' => $data));
-			$this->load->view('footer');
-		}
-		
-		function cmntnew(){
-			
-			if(empty($_POST['user_name']) or (empty($_POST['user_email'])) or (empty($_POST['cmnt_text']))){
-				
-				if (!empty($_SERVER['HTTP_REFERER'])) 
-    				header('Location: '.$_SERVER['HTTP_REFERER']);
-					return FALSE;
-			}
-				
-		/*	if($_POST['user_name']=='') $_POST['user_name'] = 'Аноним';
-			if($_POST['user_email']=='') $_POST['user_email'] = 'E-mail не указан';
-			if($_POST['cmnt_text']!=''){
-				$_POST['cmnt_text'] = nl2br($_POST['cmnt_text']);
-				$_POST['cmnt_text']='<p>'.$_POST['cmnt_text'].'</p>';
-			}else{
-				$_POST['cmnt_text']='<p>Содержимое коментария не задано</p>';
-			}
-		*/
-			$this->blogmodel->increment_cnt_comments_to_blog($_POST['blog_id']);			
-			$this->cmntmodel->insert_record_to_comments($_POST);
-			redirect('commentslist/'.$_POST['blog_id']);
-		}
-		
-		function operation_date($field){
-			
-			$list = preg_split("/-/",$field);
-			$nmonth = $this->months[$list[1]];
-			$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
-			$replacement = "\$5 $nmonth \$1 г."; 
-			return preg_replace($pattern, $replacement,$field);
-		}
-		
-		function operation_date_slash($field){
-			
-			$list = preg_split("/-/",$field);
-			$nmonth = $this->months[$list[1]];
-			$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
-			$replacement = "\$5/\$3/\$1"; 
-			return preg_replace($pattern, $replacement,$field);
-		}
+		for($i = 0;$i < count($events);$i++)
+			$events[$i]['evnt_date'] = $this->operation_date($events[$i]['evnt_date']);
 
-		function imageslist(){
+		$this->pagination->initialize($config);
+		$pages = $this->pagination->create_links();
 			
-			$data1 = array(
-							'title' => "Samoilovi.ru | Фоторепортажи | Фотографии",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd(),
-							'islogin' => $this->usrinfo['adminlogin']
-						);
-			$alb_id = $this->uri->segment(2);
+		$this->load->view('events',array('pagevalue'=>$pagevalue,'events'=>$events,'pages'=>$pages,'count'=>$count));
+	}
+	
+	function event($event_id = 0){
+		
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Просмотр коментариев блога",
+					'desc' 		=> "\"веб-сайт семьи Самойловых\"",
+					'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
+					'baseurl' 	=> base_url(),
+					'basepath' 	=> getcwd(),
+					'backpath' 	=> $backpath,
+					'admin' 	=> $this->usrinfo['status']
+				);
+		if($event_id == 0 or empty($event_id))
+			$event_id = $this->uri->segment(2);
+		$event = array();
+		$comments = array();
+		$event = $this->eventsmodel->event_record($event_id);
+		if(isset($event) and !empty($event))
+			$event['evnt_date'] = $this->operation_date($event['evnt_date']);
+		
+		$comments = $this->commentsmodel->comments_records($event_id);
+		for($i = 0;$i < count($comments);$i++)
+			$comments[$i]['cmnt_usr_date'] = $this->operation_date_slash($comments[$i]['cmnt_usr_date']);
+
+		$this->load->view('event',array('pagevalue'=>$pagevalue,'event'=>$event,'comments'=>$comments,'user'=>$this->usrinfo));	
+	}
 			
-			$data2 = array();
-			$data2 = $this->imagesmodel->get_data($alb_id);
+	function friends(){
+	
+		$pagevalue = array(
+						'title' => "Samoilovi.ru | Страница друзей",
+						'desc' 		=> "\"веб-сайт семьи Самойловых\"",
+						'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
+						'baseurl' 	=> base_url(),
+						'basepath' 	=> getcwd(),
+						'admin' 	=> $this->usrinfo['status']
+					);
+		$this->session->set_userdata('backpage','friends');
+		$friends = array();
+		$social = array();
+		
+		$friends = $this->friendsmodel->get_friends();
+		$social = $this->socialmodel->get_social();
+		
+		$i = 0; $y = 0; $key = 0;
+		$card[$i][$y] = array(	'id' => 0, 'name' => '',
+						'profession' => '','social' => 0,
+						  	'note' => '','image' => '');
+							
+		for($i = 0;$i < count($friends);$i++):			
+			$key += 1;				
+			$card[$i][$y]['id'] 		= $friends[$i]['fr_id'];
+			$card[$i][$y]['name'] 		= $friends[$i]['fr_name'];
+			$card[$i][$y]['profession'] = $friends[$i]['fr_profession'];
+			$card[$i][$y]['social']	 	= $friends[$i]['fr_social'];
+			$card[$i][$y]['note'] 		= $friends[$i]['fr_note'];
+			$card[$i][$y]['image'] 		= $friends[$i]['fr_image'];			
+			if ($key % 3 == 0):
+				$i += 1; $y = 0;
+			else:
+				$y += 1;	
+			endif;
+		endfor;
+		$this->load->view('friends',array('pagevalue'=>$pagevalue,'card'=>$card,'social'=>$social,'key'=>$key));
+	}
 			
-			$this->load->view('images',array('data1'=>$data1,'data2'=>$data2,'data3'=>$alb_id));
-			$this->load->view('footer');	
-		}
-	}	
+	function about(){
+	
+		$pagevalue = array(
+					'title' => "Samoilovi.ru | О нас",
+					'desc' 		=> "\"веб-сайт семьи Самойловых\"",
+					'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
+					'baseurl' 	=> base_url(),
+					'basepath' 	=> getcwd(),
+					'admin' 	=> $this->usrinfo['status']
+				);
+		$this->session->set_userdata('backpage','about');	
+		$this->load->view('about',array('pagevalue'=>$pagevalue));
+	}
+		
+	function comments_new(){
+			
+		$this->form_validation->set_rules('user_name','"Ваше имя"','required');
+		$this->form_validation->set_rules('user_email','"E-Mail"','required|valid_email');
+		$this->form_validation->set_rules('cmnt_text','"Комментарий"','required');
+		$this->form_validation->set_rules('homepage','"Веб-сайт"','prep_url');
+		
+		$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+		if($this->form_validation->run() == FALSE):
+			$this->event($_POST['evnt_id']);
+			return FALSE;
+		endif;
+		$this->eventsmodel->insert_comments($_POST['evnt_id']);			
+		$this->commentsmodel->insert_record($_POST);
+		redirect('event/'.$_POST['evnt_id']);
+	}
+	
+	function operation_date($field){
+			
+		$list = preg_split("/-/",$field);
+		$nmonth = $this->months[$list[1]];
+		$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
+		$replacement = "\$5 $nmonth \$1 г."; 
+		return preg_replace($pattern, $replacement,$field);
+	}
+		
+	function operation_date_slash($field){
+		
+		$list = preg_split("/-/",$field);
+		$nmonth = $this->months[$list[1]];
+		$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
+		$replacement = "\$5/\$3/\$1"; 
+		return preg_replace($pattern, $replacement,$field);
+	}
+	
+	function photo(){
+		
+		$backpath = $this->session->userdata('backpage');	
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Фоторепортажи | Фотографии",
+					'desc' 		=> "\"веб-сайт семьи Самойловых\"",
+					'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
+					'baseurl' 	=> base_url(),
+					'basepath' 	=> getcwd(),
+					'backpath' 	=> $backpath,
+					'admin' 	=> $this->usrinfo['status']
+					);
+		$album_id = $this->uri->segment(2);
+		$this->session->set_userdata('backpage','photo-albums/gallery/'.$album_id);
+		
+		$images = array();
+		$images = $this->imagesmodel->get_images($alb_id);
+		
+		$this->load->view('images',array('data1'=>$data1,'data2'=>$data2,'data3'=>$alb_id));
+	}
+	
+	function page404(){
+		
+		$pagevalue = array(
+					'title' => "Samoilovi.ru | Фоторепортажи",
+					'desc' => "\"веб-сайт семьи Самойловых\"",
+					'keyword' => "\"семейный сайт, любовь, семейные новости, отношения\"",
+					'baseurl' => base_url(),
+					'basepath' => getcwd(),
+					'admin' => $this->usrinfo['status']
+				);
+		$this->load->view('page404',array('pagevalue'=>$pagevalue));
+	}			//функция выводит 404-ю ошибку;
+		
+}	
 ?>

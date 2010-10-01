@@ -11,11 +11,11 @@
 			parent::Model();
 		}
 		
-		function get_friend_social_info_list(){
+		function get_social(){
 			
 			$this->db->order_by('soc_id asc');
 			$query = $this->db->get('social');
-			return $query->result();
+			return $query->result_array();
 		}
 		
 		function get_friend_social_info($id){

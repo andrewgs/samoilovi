@@ -13,11 +13,11 @@
 			parent::Model();
 		}
 		
-		function get_friends_info_list(){
+		function get_friends(){
 			
 			$this->db->order_by('fr_id asc');
 			$query = $this->db->get('friends');
-			return $query->result();
+			return $query->result_array();
 		}
 		
 		function get_friend_info($id){

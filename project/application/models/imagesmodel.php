@@ -21,11 +21,11 @@
 			$this->db->insert('images', $this);
 		}
 		
-		function get_data($album){
+		function get_images($album){
 			$this->db->where('img_album',$album);
 			
 			$query = $this->db->get('images');
-			return $query->result();
+			return $query->result_array();
 		}
 		
 		function get_image_all_data($type,$object,$without){

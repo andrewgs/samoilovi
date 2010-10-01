@@ -3,21 +3,33 @@
 $route['default_controller'] = "home";
 $route['scaffolding_trigger'] = "";
 
-$route['about'] = "/home/about/";
-$route['friends'] = "/home/friends/";
-$route['blog'] = "/home/blog/";
-$route['album'] = "/home/photos/";
+// routes - Home;
+$route['index']							= "home/index";
+$route['']								= "home/index";
+$route['photo-albums'] 					= "home/albums";
+$route['events'] 						= "home/events";
+$route['events/:num'] 					= "home/events";
+$route['event/:num'] 					= "home/event";
+$route['photo-albums/gallery/:num'] 	= "home/photo";
+$route['about'] 						= "home/about";
+$route['friends'] 						= "home/friends";
+
+
+
+
 $route['admin'] = "/admin/index/";
 $route['blog/:num'] = "/home/blog/";
-$route['commentslist/:num'] = "/home/commentslist/";
+$route['blog-event/:num'] = "/home/commentslist/";
 $route['cmntnew/:num'] = "/home/cmntnew/";
-$route['cmntnew'] = "/home/cmntnew/";
+$route['comment'] = "/home/comments_new/";
+$route['photo-albums/photo-gallery/:num'] = "/home/cmntnew/";
 
 $route['admin/album/:num/addphoto'] = "/admin/addphoto/";
 $route['admin/album/:num/deletephoto/:num'] = "/admin/deletephoto/";
 $route['admin/album/:num/images'] = "/admin/imageslist/";
 
 $route['album/:num/images'] = "/home/imageslist/";
+$route['admin/uploadify'] = "admin/uploadify/";
 
-/* End of file routes.php */
-/* Location: ./system/application/config/routes.php */
+//other
+$route[':any']			 = "home/page404";
