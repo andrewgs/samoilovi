@@ -60,11 +60,11 @@
 		</div>
 		<div id="footer">
 			<div id="events" class="container_12">
-			<?php for($i = 0;$i < 3;$i++): ?>
+			<?php for($i = 0;$i < count($events);$i++): ?>
 				<div class="grid_4">
-				<?php echo '<h2>'.$units[$i]['date'].'</h2>'; ?>
-				<?php $link = 'event/'.$units[$i]['id']; ?>
-				<?php echo '<p>'.$units[$i]['text'].anchor($link,' Читать далее ').'</p>'; ?>
+				<?php echo '<h2>'.$events[$i]['evnt_date'].'</h2>'; ?>
+				<?php $link = 'event/'.$events[$i]['evnt_id'].'#event_'.$events[$i]['evnt_id']; ?>
+				<?php echo '<p>'.$events[$i]['evnt_text'].anchor($link,' Читать далее ').'</p>'; ?>
 				</div>
 			<?php endfor; ?>
 			</div>

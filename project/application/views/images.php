@@ -38,7 +38,7 @@
 		<div id="content">
 			<div class="container_12">
 				<div id="internal_nav" class="grid_6">
-				<a href="<?php echo $pagevalue['baseurl'].$pagevalue['backpath']; ?>">&laquo; Вернуться назад</a>
+				<a href="<?php echo $pagevalue['baseurl'].$pagevalue['backpath']; ?>">&nbsp;&larr;&nbsp;Вернуться назад</a>
 				</div>
 			</div>
 			<div class="clear"></div>

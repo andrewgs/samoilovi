@@ -29,13 +29,13 @@ class Home extends Controller{
 		$this->load->model('socialmodel');
 		$this->load->model('imagesmodel');
 		if($this->session->userdata('logon') == '76f1847d0a99a57987156534634a1acf'):
-			$this->usrinfo['adminlogin'] = 1;			
 			$userinfo = $this->authentication->user_info('admin');
 			$this->usrinfo['firstname']		= $userinfo['usr_first_name'];
 			$this->usrinfo['secondname'] 	= $userinfo['usr_second_name'];
 			$this->usrinfo['email'] 		= $userinfo['usr_email'];
+			$this->usrinfo['status'] 		= TRUE;
 		else:
-			$this->usrinfo['status'] = TRUE;
+			$this->usrinfo['status'] = FALSE;
 		endif;
 	}
 	
@@ -46,24 +46,23 @@ class Home extends Controller{
 						'desc' 		=> "\"веб-сайт семьи Самойловых\"",
 						'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
 						'baseurl' 	=> base_url(),
-						'admin' 	=> $this->usrinfo['status']							
+						'admin' 	=> $this->usrinfo['status']
 					);
 		$this->session->set_userdata('backpage','');
 		
-		$units = $this->eventsmodel->new_entries(3);
-		for($i = 0;$i < 3; $i++):
-			$units[$i]['id'] = $units[$i]['evnt_id'];
-			$units[$i]['date'] = $this->operation_date($units[$i]['evnt_date']);				
-			$units[$i]['text'] = strip_tags($units[$i]['evnt_text']);				
-			if(mb_strlen($units[$i]['text'],'UTF-8') > 350):									
-				$units[$i]['text'] = mb_substr($units[$i]['text'],0,350,'UTF-8');	
-				$pos = mb_strrpos($units[$i]['text'],'.',0,'UTF-8');
-				$units[$i]['text'] = mb_substr($units[$i]['text'],0,$pos,'UTF-8');
-				$units[$i]['text'] .= '. ...';
+		$events = $this->eventsmodel->new_events(3);
+		for($i = 0;$i < count($events); $i++):
+			$events[$i]['evnt_date'] = $this->operation_date($events[$i]['evnt_date']);				
+			$events[$i]['evnt_text'] = strip_tags($events[$i]['evnt_text']);				
+			if(mb_strlen($events[$i]['evnt_text'],'UTF-8') > 325):									
+				$events[$i]['evnt_text'] = mb_substr($events[$i]['evnt_text'],0,325,'UTF-8');	
+				$pos = mb_strrpos($events[$i]['evnt_text'],' ',0,'UTF-8');
+				$events[$i]['evnt_text'] = mb_substr($events[$i]['evnt_text'],0,$pos,'UTF-8');
+				$events[$i]['evnt_text'] .= ' ...';
 			endif;
 		endfor;
 		
-		$this->load->view('index',array('pagevalue'=>$pagevalue,'units'=>$units));
+		$this->load->view('index',array('pagevalue'=>$pagevalue,'events'=>$events));
 	}
 	
 	function albums(){
@@ -125,7 +124,7 @@ class Home extends Controller{
 		
 		$backpath = $this->session->userdata('backpage');
 		$pagevalue = array(
-					'title' 	=> "Samoilovi.ru | Просмотр коментариев блога",
+					'title' 	=> "Samoilovi.ru | Просмотр коментариев записи блога",
 					'desc' 		=> "\"веб-сайт семьи Самойловых\"",
 					'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
 					'baseurl' 	=> base_url(),
@@ -238,7 +237,7 @@ class Home extends Controller{
 	
 	function photo(){
 		
-		$backpath = $this->session->userdata('backpage');	
+		$backpath = $this->session->userdata('backpage');
 		$pagevalue = array(
 					'title' 	=> "Samoilovi.ru | Фоторепортажи | Фотографии",
 					'desc' 		=> "\"веб-сайт семьи Самойловых\"",

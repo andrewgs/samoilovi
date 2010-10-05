@@ -12,12 +12,12 @@
 			parent::Model();
 		}
 		
-		function get_events_all_records(){
+		/*function get_events_all_records(){
 		
 			$this->db->order_by('evnt_date desc,evnt_id desc');
 			$query = $this->db->get('events');
 			return $query->result();
-		}
+		}*/
 		function events_limit($count,$from){
 		
 			$this->db->limit($count,$from);
@@ -25,41 +25,41 @@
 			$query = $this->db->get('events');
 			return $query->result_array();
 		}
-		function insert_record_to_events($data){
 		
-			$this->evnt_title = $data['title'];
-			$this->evnt_date = $data['date']; 
-			$this->evnt_text = $data['text'];
-			$this->evnt_cnt_cmnt = 0;
-
-			$this->db->insert('events', $this);
+		function insert_record($data){
+		
+			$this->evnt_title 		= $data['title'];
+			$this->evnt_date 		= $data['date']; 
+			$this->evnt_text 		= $data['text'];
+			$this->evnt_cnt_cmnt 	= 0;
+			$this->db->insert('events',$this);
 		}
 		
-		function delete_record_to_events($id){
+		function delete_record($id){
 			
-			$this->db->delete('events', array('evnt_id' => $id));
+			$this->db->delete('events',array('evnt_id'=>$id));
 		}		
 	
-		function update_record_to_events($data){
+		function update_record($data){
 			
-			$this->evnt_id = $data['id'];
-			$this->evnt_title = $data['title'];
-			$this->evnt_text = $data['text'];
-			$this->evnt_cnt_cmnt = $data['cnt'];
-			$this->evnt_date = $data['date'];
-			
-			$this->db->where('evnt_id', $this->evnt_id);
-			$this->db->update('events', $this);
+			$this->evnt_id 			= $data['id'];
+			$this->evnt_title 		= $data['title'];
+			$this->evnt_text 		= $data['text'];
+			$this->evnt_cnt_cmnt	= $data['cnt'];
+			$this->evnt_date 		= $data['date'];
+			$this->db->where('evnt_id',$this->evnt_id);
+			$this->db->update('events',$this);
 		}
 		
-		function new_entries($count){
+		function new_events($count){
 		
-			$this->db->order_by('evnt_date desc, evnt_id desc');
+			$this->db->order_by('evnt_date desc,evnt_id desc');
 			$query = $this->db->get('events',$count);
 			return $query->result_array();
 		}
 		
 		function event_record($id){
+		
 			$this->db->where('evnt_id',$id);
 			$query = $this->db->get('events',1);
 			$data = $query->result_array();
@@ -74,6 +74,7 @@
 		}
 		
 		function delete_comments($id){
+		
 			$this->db->set('evnt_cnt_cmnt','evnt_cnt_cmnt-1',FALSE);
 			$this->db->where('evnt_id',$id);
 			$this->db->update('events');

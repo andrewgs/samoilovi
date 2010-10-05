@@ -1,349 +1,425 @@
 <?php
 	
-	class Admin extends Controller{
+class Admin extends Controller{
 	
-		var $months = array("01"=>"января",
-							"02"=>"февраля",
-							"03"=>"марта",
-							"04"=>"апреля",
-							"05"=>"мая",
-							"06"=>"июня",
-							"07"=>"июля",
-							"08"=>"августа",
-							"09"=>"сентября",
-							"10"=>"октября",
-							"11"=>"ноября",
-							"12"=>"декабря"
-						);		
+	var $months = array("01"=>"января", "02"=>"февраля",
+					"03"=>"марта",	"04"=>"апреля",
+					"05"=>"мая",	"06"=>"июня",
+					"07"=>"июля",	"08"=>"августа",
+					"09"=>"сентября", "10"=>"октября",
+					"11"=>"ноября",	"12"=>"декабря"
+				);		
 		
-		var $message = array(
-							'error' 		=> '',
-							'saccessfull' 	=> '',
-							'message' 		=> '',
-							'status'		=> 0
-							);
-		
-		function Admin(){
-		
-			parent::Controller();
-			$this->load->helper('url');
-			$this->load->helper('form');
-			$this->load->model('blogmodel');
-			$this->load->model('cmntmodel');
-			$this->load->model('authentication');
-			$this->load->model('albummodel');
-			$this->load->model('friendsmodel');
-			$this->load->model('socialmodel');
-			$this->load->model('unionmodel');
-			$this->load->model('imagesmodel');
-			$this->load->library('session');
-			$this->load->library('upload');
-			$this->load->library('image_lib');
-			$this->load->library('pagination');
-			$this->load->library('form_validation');
-			if ($this->session->userdata('logon') == '76f1847d0a99a57987156534634a1acf') return;
-			if ($this->uri->segment(2)==='login') return;
-			redirect('admin/login');
-		}
-		
-		function index(){
-			$data = array(
-							'title' => "Samoilovi.ru | Администрирование",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
+	var $message = array(
+						'error' 		=> '',
+						'saccessfull' 	=> '',
+						'message' 		=> '',
+						'status'		=> 0
 						);
-			$this->load->view('admin', array('data'=>$data));
-			$this->load->view('footer');	
-		}
 		
-		function blognew(){
-			$data = array(
-							'title' => "Samoilovi.ru | Администрирование | Создание блога",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			$this->load->view('blog_new',array('data'=>$data));
-			$this->load->view('footer');
-		}
+	function Admin(){
+		
+		parent::Controller();
+		$this->load->model('eventsmodel');
+		$this->load->model('commentsmodel');
+		$this->load->model('authentication');
+		$this->load->model('albummodel');
+		$this->load->model('friendsmodel');
+		$this->load->model('socialmodel');
+		$this->load->model('imagesmodel');
+		$this->load->model('unionmodel');
+		$this->load->library('upload');
+		$this->load->library('image_lib');
+		if ($this->session->userdata('logon') == '76f1847d0a99a57987156534634a1acf') return;
+		if ($this->uri->segment(2)==='login') return;
+		redirect('admin/login');
+	}
+		
+	function index(){
+	
+		$pagevalue = array(
+					'title' => "Samoilovi.ru | Администрирование",
+					'desc' => "\"\"",
+					'keyword' => "\"\"",
+					'baseurl' => base_url()
+				);
+		$this->session->set_userdata('backpage','admin');
+		$this->session->unset_userdata('commentlist');
+		$msg = $this->setmessage('','','',0);
+		
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+		
+		$this->load->view('admin/adminpanel',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+	}
+	
+	function login(){
+		
+		$backpath = $this->session->userdata('backpage');	
+		$pagevalue = array(
+					'title'		=> "Samoilovi.ru | Администрирование | Аутентификация пользователя",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'backpath' 	=> $backpath,
+					'baseurl' 	=> base_url(),
+					);
+		$msg = $this->setmessage('','','',0);
+		
+		if($this->input->post('btsabmit')):
+			if (empty($_POST['password']) or empty($_POST['password'])):
+				$msg = $this->setmessage('Логин и пароль не могут быть пустымы!','','Ошибка авторизации!',1);
+				$this->load->view('admin/login',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+				return FALSE;
+			endif;
 				
-		function bloginsert(){
+			$userinfo = $this->authentication->user_info($_POST['login']);
+			if(empty($userinfo)):
+				$text = 'Пользователь '.$_POST['login'].' не зарегистрирован!';
+				$msg = $this->setmessage($text,'','Ошибка авторизации!',1);
+				$this->load->view('admin/login',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+				return FALSE;
+			else:
+				if($userinfo['usr_password'] === md5($_POST['password'])):
+					$session_data = array('logon'=>'76f1847d0a99a57987156534634a1acf');
+                   	$this->session->set_userdata($session_data);
+                   	redirect('admin');	
+				else:
+					$msg = $this->setmessage('Введен не верный пароль.','','Ошибка авторизации!',1);
+					$this->load->view('admin/login',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+					return FALSE;
+				endif;
+			endif;
+			$this->load->view('admin/login',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+			return FALSE;
+		endif;
+		$msg = $this->setmessage('','','Введите логин и пароль для авторизации',1);
+		$this->load->view('admin/login',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+	}
 		
-			$this->form_validation->set_rules('title', '"Оглавление"', 'required');
-			$this->form_validation->set_rules('text', '"Содержимое"', 'required');
+	function logoff(){
+		
+       	$this->session->sess_destroy();
+		redirect('');
+	}
+
+	function events(){
+		
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Просмотр записей блога",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'baseurl' 	=> base_url()
+					);
+		$this->session->set_userdata('backpage','admin/events');
+		$msg = $this->setmessage('','','',0);
+		$this->session->unset_userdata('commentlist');
+		$events = array();
+		$count = $this->eventsmodel->count_records();
+		
+		$config['base_url'] 		= base_url().'/admin/events';	 		
+       	$config['total_rows'] 		= $count;							 	
+       	$config['per_page'] 		= 5;   								
+       	$config['num_links'] 		= 2;   	 							
+       	$config['uri_segment'] 		= 3;								
+		$config['first_link'] 		= 'В начало';
+		$config['last_link'] 		= 'В конец';
+		$config['next_link'] 		= 'Далее &raquo;';
+		$config['prev_link'] 		= '&laquo; Назад';
+		$config['cur_tag_open'] 	= '<b>';
+		$config['cur_tag_close'] 	= '</b>';
+					
+		$from = intval($this->uri->segment(3));
+		if(isset($from) and !empty($from))
+			$this->session->set_userdata('backpage','admin/events/'.$from);
+		$events = $this->eventsmodel->events_limit(5,$from);
+		
+		if (!count($events)) redirect('admin/event-new');
+		
+		for($i = 0;$i < count($events);$i++)
+			$events[$i]['evnt_date'] = $this->operation_date($events[$i]['evnt_date']);
+		
+		$this->pagination->initialize($config);
+		$pages = $this->pagination->create_links();
+		
+		$this->pagination->initialize($config);
+		$pages = $this->pagination->create_links();
+		
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+		
+		$this->load->view('admin/admin-events',array('pagevalue'=>$pagevalue,'events'=>$events,'pages'=>$pages,'msg'=>$msg));		
+	}
+	
+	function event($event_id = 0,$error = FALSE){
+		
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Коментарии к записи",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'backpath' 	=> $backpath,
+					'valid'		=> $error,
+					'formuri' 	=> $this->uri->uri_string(),
+					'baseurl' 	=> base_url()
+				);
+		$userinfo = array(
+					'firstname' 	=> '',
+					'secondname' 	=> '',
+					'email' 		=> '',
+				);
+		$userinfo = $this->authentication->user_info('admin');
+		$msg = $this->setmessage('','','',0);
+		if($event_id == 0 or empty($event_id))
+			$event_id = $this->uri->segment(3);
+		
+		if($this->input->post('op')):
+			$this->form_validation->set_rules('user_name','"Ваше имя"','required');
+			$this->form_validation->set_rules('user_email','"E-mail"','required|valid_email');
+			$this->form_validation->set_rules('cmnt_text','"Комментарий"','required');
+			$this->form_validation->set_rules('homepage','"Веб-сайт"','');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if(!$this->form_validation->run()):
+				$_POST['op'] = NULL;
+				$this->event($_POST['event_id'],TRUE);
+				return FALSE;
+			else:
+				if(isset($_POST['homepage']) and !empty($_POST['homepage']))
+					if(strncmp(strtolower($_POST['homepage']),'http://',7) != 0)
+						$_POST['homepage'] = 'http://'.$_POST['homepage'];
+				$this->eventsmodel->insert_comments($_POST['event_id']);			
+				$this->commentsmodel->insert_record($_POST);
+				$_POST['op'] = NULL;
+				$this->event($_POST['event_id'],FALSE);
+				return TRUE;
+			endif;
+		endif;
+		$event = array();
+		$comments = array();
+		$event = $this->eventsmodel->event_record($event_id);
+		if(isset($event) and !empty($event))
+			$event['evnt_date'] = $this->operation_date($event['evnt_date']);
+		
+		$comments = $this->commentsmodel->comments_records($event_id);
+		for($i = 0;$i < count($comments);$i++)
+			$comments[$i]['cmnt_usr_date'] = $this->operation_date_slash($comments[$i]['cmnt_usr_date']);
+		
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+		
+		$this->load->view('admin/admin-event',array('pagevalue'=>$pagevalue,'event'=>$event,'comments'=>$comments,'user'=>$userinfo,'msg'=>$msg));
+	}
+			
+	function eventnew(){
+	
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+						'title' 	=> "Samoilovi.ru | Администрирование | Создание записи блога",
+						'desc' 		=> "\"\"",
+						'keyword' 	=> "\"\"",
+						'backpath' 	=> $backpath,
+						'baseurl'	=> base_url()
+					);
+		$this->session->unset_userdata('commentlist');
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('title','"Оглавление"','required');
+			$this->form_validation->set_rules('text','"Содержимое"','required');
+			$this->form_validation->set_rules('date','"Дата"','required');
 			
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
 			
-			if ($this->form_validation->run() == FALSE){
-				
-				$this->blognew();
-			}else{
-			
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->eventnew();
+				return FALSE;
+			else:
 				$pattern = "/(\d+)\/(\w+)\/(\d+)/i";
 				$replacement = "\$3-\$2-\$1";
 				$_POST['date'] = preg_replace($pattern, $replacement, $_POST['date']);
-				
-				$this->blogmodel->insert_record_to_blog($_POST);
-				redirect('admin/blogview');
-			}
-		}
-		
-		function blogedit(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Редактирование блога",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			$id = $this->uri->segment(3);
-			$blog = $this->blogmodel->get_blog_record($id);
-			$data2 = array();
-			
-			foreach ($blog as $blg){
-				
-				$data2['date'] = $this->operation_date_slash($blg->blg_date);
-				$data2['id'] = $id;
-				$data2['cnt'] = $blg->blg_cnt_cmnt;
-				$data2['text'] = $blg->blg_text;
-				$data2['title'] = $blg->blg_title;
-			}
-						
-        	$this->load->view('blog_edit',array('data1'=>$data1,'data2'=>$data2));
-			$this->load->view('footer');			
-		}
-		
-		function blogupdate(){
-		
-			$pattern = "/(\d+)\/(\w+)\/(\d+)/i";
-			$replacement = "\$3-\$2-\$1";
-			$_POST['date'] = preg_replace($pattern, $replacement, $_POST['date']);
-			
-			$this->blogmodel->update_record_to_blog($_POST);
-			redirect('admin/blogview');
-		}
-		
-		function blogdestroy(){
-		
-			$id = $this->uri->segment(3);
-			$this->blogmodel->delete_record_to_blog($id);
-			$this->cmntmodel->delete_records_to_comments($id);
-			redirect('admin/blogview');
-		}
-		
-		function blogview(){
-			
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Просмотр блогов",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			
-			$data3 = $this->blogmodel->count_records();
-			
-			$config['base_url'] = base_url().'/admin/blogview';	 		
-        	$config['total_rows'] = $data3;							 	
-        	$config['per_page'] =  5;   								
-        	$config['num_links'] = 2;   	 							
-        	$config['uri_segment'] = 3;								
-			$config['first_link'] = 'В начало';
-			$config['last_link'] = 'В конец';
-			$config['next_link'] = 'Далее &raquo;';
-			$config['prev_link'] = '&laquo; Назад';
-			$config['cur_tag_open'] = '<b>';
-			$config['cur_tag_close'] = '</b>';
-						
-			$from = intval($this->uri->segment(3));			
-			$data2['query'] = $this->blogmodel->get_blog_limit_records(5,$from);
-			
-			foreach ($data2['query'] as $data){
-				
-				$data->blg_date = $this->operation_date($data->blg_date);
-			}
-			
-			$this->pagination->initialize($config);
-			$data2['pager'] = $this->pagination->create_links();
-			
-			if (empty($data2)) redirect('admin/blognew');
-			
-			$this->load->view('blog_view',array('data1'=>$data1,'data2'=>$data2,'data3'=>$data3));
-			$this->load->view('footer');
-		}
-		
-		function commentsview(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Просмотр коментариев блога",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			$data4 = array(
-						'firstname' => '',
-						'secondname' => '',
-						'email' => '',
-						);
-			$userinfo = $this->authentication->get_users_info('admin');
-			
-			foreach($userinfo as $value){
-				$data4['firstname'] = $value->usr_first_name;
-				$data4['secondname'] = $value->usr_second_name;
-				$data4['email'] = $value->usr_email;
-			}
-			$id = $this->uri->segment(3);
-			$data2 = $this->blogmodel->get_blog_record($id);
-			
-			foreach ($data2 as $data){
-				
-				$data->blg_date = $this->operation_date($data->blg_date);
-			}
-			
-			$data3 = $this->cmntmodel->get_comments_to_blog($id);
-			
-			foreach ($data3 as $data){
-				
-				$data->cmnt_usr_date = $this->operation_date_slash($data->cmnt_usr_date);
-			}
-			
-			$this->load->view('comments_view',array('data1'=>$data1,'data2'=>$data2,'data3'=>$data3,'data4'=>$data4));
-			$this->load->view('footer');
-		}
-		
-		function commentsinsert(){
-		
-			$this->form_validation->set_rules('user_name', '"Ваше имя"', 'required');
-			$this->form_validation->set_rules('user_email', '"E-mail"', 'required|valid_email');
-			$this->form_validation->set_rules('cmnt_text', '"Комментарий"', 'required');
-			
+				$this->eventsmodel->insert_record($_POST);
+				$this->session->set_flashdata('operation_error',' ');
+				$this->session->set_flashdata('operation_message','Название новой записи - '.$_POST['title']);
+				$this->session->set_flashdata('operation_saccessfull','Новая запись создана успешно');
+				redirect($backpath);
+			endif;
+		endif;
+		$this->load->view('admin/admin-event-new',array('pagevalue'=>$pagevalue));
+	}
+	
+	function eventedit($event_id = 0,$error = FALSE){
+	
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Редактирование записи блога",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'formuri' 	=> $this->uri->uri_string(),
+					'backpath' 	=> $backpath,
+					'valid'		=> $error,
+					'baseurl' 	=> base_url()
+				);
+		if($event_id == 0 or empty($event_id))
+			$event_id = $this->uri->segment(3);
+		$this->session->unset_userdata('commentlist');
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('title','"Оглавление"','required');
+			$this->form_validation->set_rules('text','"Содержимое"','required');
+			$this->form_validation->set_rules('date','"Дата"','required');
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->eventedit($event_id,TRUE);
+				return FALSE;
+			else:
+				$pattern = "/(\d+)\/(\w+)\/(\d+)/i";
+				$replacement = "\$3-\$2-\$1";
+				$_POST['date'] = preg_replace($pattern,$replacement,$_POST['date']);
+				$this->eventsmodel->update_record($_POST);
+				redirect('admin/events');
+			endif;
+		endif;
 			
-			if ($this->form_validation->run() == FALSE){
-
-				redirect('admin/commentsview/'.$_POST['blog_id']);
-			}else{
-				
-				if(isset($_POST['homepage']) and !empty($_POST['homepage'])){
+		$event = array();
+		$event = $this->eventsmodel->event_record($event_id);
+		
+		if(isset($event) and !empty($event))
+			$event['evnt_date'] = $this->operation_date_slash($event['evnt_date']);
 					
-					if(strncmp(strtolower($_POST['homepage']),'http://',7) != 0)
-						$_POST['homepage'] = 'http://'.$_POST['homepage'];
-				}
-				
-				$this->blogmodel->increment_cnt_comments_to_blog($_POST['blog_id']);			
-				$this->cmntmodel->insert_record_to_comments($_POST);
-				redirect('admin/commentsview/'.$_POST['blog_id']);
-			}
-		}
+        $this->load->view('admin/admin-event-edit',array('pagevalue'=>$pagevalue,'event'=>$event));
+	}				
+	
+	function eventdestroy(){
 		
-		function commentedit(){
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Редактирование комментария",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'backuri' => base_url().'admin/commentsview/'.$this->uri->segment(3)
-						);
-			$id = $this->uri->segment(4);
-			$data2 = $this->cmntmodel->get_comment_record($id);
-			
-			foreach ($data2 as $date){
-				
-				$date->cmnt_usr_date = $this->operation_date_slash($date->cmnt_usr_date);				 
-			}
-			
-        	$this->load->view('comment_edit',array('data1'=>$data1,'data2'=>$data2));
-			$this->load->view('footer');			
-		}
+		$backpath = $this->session->userdata('backpage');
+		$event_id = $this->uri->segment(3);
+		$event = $this->eventsmodel->event_record($event_id);
+		$this->eventsmodel->delete_record($event_id);
+		$this->commentsmodel->delete_records($event_id);
+		$this->session->set_flashdata('operation_error',' ');
+		$this->session->set_flashdata('operation_message','Название удаленной записи - '.$event['evnt_title']);
+		$this->session->set_flashdata('operation_saccessfull','Запись удалена успешно');
+		redirect($backpath);
+	}
+	
+	function commentedit($comment_id = 0,$event_id = 0,$error = FALSE){
 		
-		function commentdestroy(){
-			$blog_id = $this->uri->segment(3);
+		$commentlist = $this->session->userdata('commentlist');
+		$pagevalue = array(
+					'title' 		=> "Samoilovi.ru | Администрирование | Редактирование комментария",
+					'desc' 			=> "\"\"",
+					'keyword' 		=> "\"\"",
+					'baseurl' 		=> base_url(),
+					'backpath' 		=> '',
+					'commentlist' 	=> $commentlist,
+					'formuri' 		=> $this->uri->uri_string(),
+					'valid'			=> $error,
+				);
+		$comment = array();
+		if($comment_id == 0 or empty($comment_id)):
 			$comment_id = $this->uri->segment(4);
-			$this->blogmodel->decrement_cnt_comments_to_blog($blog_id);
-			$this->cmntmodel->delete_record_to_comments($comment_id);
-			redirect('admin/commentsview/'.$blog_id);
-		}
+			$event_id 	= $this->uri->segment(3);
+		endif;
+		$pagevalue['backpath'] = 'admin/event/'.$event_id.'#comment_'.$comment_id;
+		if(isset($pagevalue['commentlist']) and !empty($pagevalue['commentlist'])) 
+			$pagevalue['backpath'] = $pagevalue['commentlist'].'#comment_'.$comment_id;
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('user_name','"Имя"','required');
+			$this->form_validation->set_rules('user_email','"E-mail"','required|valid_email');
+			$this->form_validation->set_rules('cmnt_text','"Текст комментария"','required');
+			$this->form_validation->set_rules('user_date','"Дата"','');
+			$this->form_validation->set_rules('homepage','"Веб-сайт"','');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->commentedit($_POST['id'],$_POST['event_id'],TRUE);
+				return FALSE;
+			else:
+				$pattern = "/(\d+)\/(\w+)\/(\d+)/i";
+				$replacement = "\$3-\$2-\$1";
+				$_POST['user_date'] = preg_replace($pattern, $replacement, $_POST['user_date']);
+				$this->commentsmodel->update_record($_POST);
+				redirect($pagevalue['backpath']);
+			endif;
+		endif;
+		$comment = $this->commentsmodel->comment_record($comment_id);
+		$comment['cmnt_usr_date'] = $this->operation_date_slash($comment['cmnt_usr_date']);				 
+		$this->load->view('admin/admin-comment-edit',array('pagevalue'=>$pagevalue,'comment'=>$comment));
+	}	
 		
-		function commentupdate(){
-			
-			if(empty($_POST['user_name']) or (empty($_POST['user_email'])) or (empty($_POST['cmnt_text']))){
-				
-				if (!empty($_SERVER['HTTP_REFERER'])) 
-    				header('Location: '.$_SERVER['HTTP_REFERER']);
-					return FALSE;
-			}
-			
-			$pattern = "/(\d+)\/(\w+)\/(\d+)/i";
-			$replacement = "\$3-\$2-\$1";
-			$_POST['user_date'] = preg_replace($pattern, $replacement, $_POST['user_date']);
-			
-			$this->cmntmodel->update_record_to_comments($_POST);
-			redirect('admin/commentsview/'.$_POST['blog_id']);
-		}
+	function commentdestroy(){
 		
-		function login(){
+		$event_id = $this->uri->segment(3);
+		$comment_id = $this->uri->segment(4);
+		$backpath = 'admin/event/'.$event_id;
+		$commentlist = $this->session->userdata('commentlist');
+		if(isset($commentlist) and !empty($commentlist)) 
+			$backpath = $commentlist;
+		$comment = $this->commentsmodel->comment_record($comment_id);
+		$this->eventsmodel->delete_comments($event_id);
+		$this->commentsmodel->delete_record($comment_id);
+		$this->session->set_flashdata('operation_error',' ');
+		$this->session->set_flashdata('operation_message','Комментарий от "'.$comment['cmnt_usr_name'].'"');
+		$this->session->set_flashdata('operation_saccessfull','Комментарий удален успешно');
+		redirect($backpath);
+	}
 		
-			$data1 = array(
-						'title' => "Samoilovi.ru | Администрирование | Аутентификация пользователя",
-						'desc' => "\"\"",
-						'keyword' => "\"\"",
-						'baseurl' => base_url(),
-						);
-			
-			$this->setmessage('','','',0);
-			
-			if (isset($_POST['password']) and isset($_POST['login'])){
-				
-				if (empty($_POST['password']) or empty($_POST['password'])){
+	function comments(){
+		
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Список комментариев за 3 недели",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'backpath' 	=> $backpath,
+					'baseurl' 	=> base_url()
+			);
+		$msg = $this->setmessage('','','',0);
+		$this->session->set_userdata('commentlist','admin/comments');
+		$count = $this->unionmodel->count_record(21);
+		$config['base_url'] 		= base_url().'/admin/comments';	
+       	$config['total_rows'] 		= $count;
+		$config['per_page'] 		= 5;
+       	$config['num_links'] 		= 2;
+       	$config['uri_segment'] 		= 3;
+		$config['first_link'] 		= 'В начало';
+		$config['last_link'] 		= 'В конец';
+		$config['next_link'] 		= 'Далее &raquo;';
+		$config['prev_link'] 		= '&laquo; Назад';
+		$config['cur_tag_open'] 	= '<b>';
+		$config['cur_tag_close']	= '</b>';
+	
+		$from = intval($this->uri->segment(3));
+		if(isset($from) and !empty($from))
+			$this->session->set_userdata('commentlist','admin/comments/'.$from);
 					
-					$msg = $this->setmessage('Поля "Логин" и "Пароль" не могут быть пустымы!','','Ошибка авторизации!',1);
-					
-					$this->load->view('login',array('data1'=>$data1,'data2'=>'','msg'=>$msg));
-					$this->load->view('footer');
-					return FALSE;
-				}
-				
-				$userinfo = $this->authentication->get_users_info($_POST['login']);
-				if(empty($userinfo)){
-						
-					$text = 'Пользователь '.$_POST['login'].' не зарегистрирован в системе!';
-					$msg = $this->setmessage($text,'','Ошибка авторизации!',1);
-					
-					$this->load->view('login',array('data1'=>$data1,'data2'=>'','msg'=>$msg));
-					$this->load->view('footer');
-					return FALSE;
-				}else{
-					foreach($userinfo as $value){
-						$usrinfo['usr_password'] = $value->usr_password;
-						$usrinfo['usr_login'] = $value->usr_login;
-					}
-					if ($usrinfo['usr_password'] === md5($_POST['password'])){
-						$session_data = array('logon' => '76f1847d0a99a57987156534634a1acf');
-                    	$this->session->set_userdata($session_data);
-                    	redirect('admin');	
-					}else{
-						$msg = $this->setmessage('Введен не верный пароль.','','Ошибка авторизации!',1);
-			
-						$this->load->view('login',array('data1'=>$data1,'data2'=>$_POST['login'],'msg'=>$msg));
-						$this->load->view('footer');
-						return FALSE;
-					}
-				}
-				$this->load->view('login',array('data1'=>$data1,'data2'=>'','msg'=>$this->message));
-				$this->load->view('footer');
-				return;
-			}
-			$msg = $this->setmessage('','','Введите логин и пароль для авторизации',1);
-			
-			$this->load->view('login',array('data1'=>$data1,'data2'=>'','msg'=>$msg));
-			$this->load->view('footer');
-		}
+		$from = intval($this->uri->segment(3));			
+		$comments = $this->unionmodel->select_comments(21,5,$from);			
+		for($i = 0;$i < count($comments);$i++):
+			$comments[$i]['evnt_date'] = $this->operation_date($comments[$i]['evnt_date']);
+			$comments[$i]['cmnt_usr_date'] = $this->operation_date_slash($comments[$i]['cmnt_usr_date']);
+		endfor;
+		$this->pagination->initialize($config);
+		$pages = $this->pagination->create_links();
 		
-		function logoff(){
-        	$this->session->sess_destroy();
-            redirect('');
-        }
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
 		
-		function albumsview(){
-			$data1 = array(
+		$this->load->view('admin/comments',array('pagevalue'=>$pagevalue,'comments'=>$comments,'pages'=>$pages,'msg'=>$msg));
+	}
+			
+	function albumsview(){
+		$data1 = array(
 							'title' => "Samoilovi.ru | Администрирование | Фоторепортажи",
 							'desc' => "\"\"",
 							'keyword' => "\"\"",
@@ -901,57 +977,17 @@
 			return preg_replace($pattern, $replacement,$field);
 		}
 		
-		function commentslist(){
-			
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Список комментариев за 3 недели",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			
-			$data3 = $this->unionmodel->get_count_cmnt_blog_record(21);
-			
-			$config['base_url'] = base_url().'/admin/commentslist';	
-        	$config['total_rows'] = $data3;
-			$config['per_page'] =  5;
-        	$config['num_links'] = 2;
-        	$config['uri_segment'] = 3;
-			$config['first_link'] = 'В начало';
-			$config['last_link'] = 'В конец';
-			$config['next_link'] = 'Далее &raquo;';
-			$config['prev_link'] = '&laquo; Назад';
-			$config['cur_tag_open'] = '<b>';
-			$config['cur_tag_close'] = '</b>';
 		
-			$from = intval($this->uri->segment(3));			
-			$data2['query'] = $this->unionmodel->select_cmnt_blog_from_list(21,5,$from);
-			
-			
-						
-			foreach ($data2['query'] as $data){
-				
-				$data->blg_date = $this->operation_date($data->blg_date);
-				$data->cmnt_usr_date = $this->operation_date_slash($data->cmnt_usr_date);
-			}
-			
-			$this->pagination->initialize($config);
-			$data2['pager'] = $this->pagination->create_links();
-			
-			$this->load->view('comments_list',array('data1'=>$data1, 'data2'=>$data2,'data3'=>$data3));
-			$this->load->view('footer'); 
-		}
 		
-		function setmessage($data1,$data2,$data3,$data4){
+	function setmessage($error,$saccessfull,$message,$status){
 			
-			$this->message['error'] = $data1;
-			$this->message['saccessfull'] = $data2;
-			$this->message['message'] = $data3;
-			$this->message['status'] = $data4;
-			
-			return $this->message;
-			
-		}
+		$this->message['error'] = $error;
+		$this->message['saccessfull'] = $saccessfull;
+		$this->message['message'] = $message;
+		$this->message['status'] = $status;
+		
+		return $this->message;
+	}		//установка сообщения;
 
 		function profile(){
 			

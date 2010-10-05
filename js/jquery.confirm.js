@@ -28,10 +28,10 @@ jQuery.fn.confirm = function(options) {
     options.stopAfter = 'never';
   }
   options.buttons = jQuery.extend({
-    ok: 'Да',
-    cancel: 'Нет',
+    ok: 'Да ',
+    cancel: ' Нет',
     wrapper:'<a href="#"></a>',
-    separator: ' / '
+    separator: '&nbsp;'
   }, options.buttons);
 
   // Shortcut to eventType.

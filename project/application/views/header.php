@@ -2,7 +2,8 @@
 if($pagevalue['admin']):
 	echo '<div id="admin-panel">';
 	echo '<span>Вы вошли как Администратор</span>
-		 <a class="logout" href="'.$pagevalue['baseurl'].'admin/logoff">Завершить сеанс</a>';
+		  &nbsp;&nbsp;<a class="logout" href="'.$pagevalue['baseurl'].'admin">Управление</a>&nbsp;|
+		  <a class="logout" href="'.$pagevalue['baseurl'].'logoff">Завершить сеанс</a>';
 	echo '</div>';
 endif;
 ?>

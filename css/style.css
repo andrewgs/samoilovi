@@ -244,11 +244,11 @@ div.message {
 	color: #34332d;
 	font: bold 13px/17px Calibri, arial;
 	height: 1.5em;
-	left: 75%;	
+	left: 70%;	
 	padding: 0.2em 1em;
 	position: absolute;	
 	top: 0;
-	width: 278px;	
+	width: 350px;	
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;	
 }
@@ -256,4 +256,11 @@ div.post-header-friend {
 	background: url('../images/blog-header.png') repeat-x 0 0;
 	height: 68px;
 	padding: 0 0.8em;
+}
+.fieldset{
+	border: 3px double #b5b5b5;
+	hight: 250px;
+	padding: 15px;
+	padding-bottom: 15px;
+	margin: 10px 0;
 }

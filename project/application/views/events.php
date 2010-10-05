@@ -96,4 +96,4 @@
 		</div>
 		<div class="push"></div>	 
 	</div>
-</div>
+	<?php $this->load->view('footer'); ?>
