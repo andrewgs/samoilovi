@@ -20,13 +20,11 @@
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.confirm.js"></script>'.CRLT;
 ?> 
 	<script type="text/javascript"> 
-		$(function(){
-			$("div.blog-content").each(function(){
-				$(this).parents("div.blog-center:first").css('height', $(this).height()+10);
-			});
-		});
-		$(document).ready(function() {	
-			$('a.delete').confirm();
+		$(document).ready(function(){
+				$("div.blog-content").each(function(){
+					$(this).parents("div.blog-center:first").css('height', $(this).height()+10);
+				});
+				$('a.delete').confirm();
 		});
 	</script> 	
 </head>

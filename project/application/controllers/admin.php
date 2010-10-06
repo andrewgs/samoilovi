@@ -418,31 +418,74 @@ class Admin extends Controller{
 		$this->load->view('admin/comments',array('pagevalue'=>$pagevalue,'comments'=>$comments,'pages'=>$pages,'msg'=>$msg));
 	}
 			
-	function albumsview(){
-		$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Фоторепортажи",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd()
-						);
-			$data2 = $this->albummodel->get_albums_info_list();
-
-			$this->load->view('albums_view',array('data1' => $data1, 'data2' => $data2));
-			$this->load->view('footer');			
-		}
-		
-		function albumnew(){
+	function setmessage($error,$saccessfull,$message,$status){
 			
-			$pagevalue = array(
-							'title' => "Samoilovi.ru | Администрирование | Создание нового фотоальбома",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			$this->load->view('album_new',array('pagevalue'=>$pagevalue));
-			$this->load->view('footer');
-		}
+		$this->message['error'] = $error;
+		$this->message['saccessfull'] = $saccessfull;
+		$this->message['message'] = $message;
+		$this->message['status'] = $status;
+		
+		return $this->message;
+	}		//установка сообщения;
+	
+	function albums(){
+	
+		$pagevalue = array(
+					'title' => "Samoilovi.ru | Администрирование | Фоторепортажи",
+					'desc' => "\"\"",
+					'keyword' => "\"\"",
+					'baseurl' => base_url(),
+					'basepath' => getcwd()
+				);
+		$this->session->set_userdata('backpage','admin/album-gallary');
+		$msg = $this->setmessage('','','',0);
+		$this->session->unset_userdata('commentlist');
+		
+		$albums = array();
+		$albums = $this->albummodel->albums_records();
+		
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+		
+		$this->load->view('admin/admin-albums',array('pagevalue'=>$pagevalue,'albums'=>$albums,'msg'=>$msg));
+	}
+
+	function albumnew(){
+		
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Создание нового фотоальбома",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'backpath' 	=> $backpath,
+					'baseurl' 	=> base_url()
+				);
+		$this->session->unset_userdata('commentlist');
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('title','"Название альбома"','required');
+			$this->form_validation->set_rules('photo_title','"Подпись"','required');
+			$this->form_validation->set_rules('annotation','"Описание альбома"','required');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->albumnew();
+				return FALSE;
+			else:
+				$img = $this->resize_img($_FILES,186,186,FALSE,'admin/albumnew');
+				$_POST['image'] = $img['image'];
+				$this->albummodel->insert_record($_POST);
+				$this->session->set_flashdata('operation_error',' ');
+				$this->session->set_flashdata('operation_message','Название альбома - '.$_POST['title']);
+				$this->session->set_flashdata('operation_saccessfull','Новая запись создана успешно');
+				redirect($backpath);
+			endif;
+		endif;
+		
+		$this->load->view('admin/admin-album-new',array('pagevalue'=>$pagevalue));
+	}
 		
 		function albuminsert(){			
 			
@@ -976,18 +1019,9 @@ class Admin extends Controller{
 			$replacement = "\$5/\$3/\$1"; 
 			return preg_replace($pattern, $replacement,$field);
 		}
-		
-		
-		
-	function setmessage($error,$saccessfull,$message,$status){
 			
-		$this->message['error'] = $error;
-		$this->message['saccessfull'] = $saccessfull;
-		$this->message['message'] = $message;
-		$this->message['status'] = $status;
 		
-		return $this->message;
-	}		//установка сообщения;
+	
 
 		function profile(){
 			
@@ -1083,5 +1117,101 @@ class Admin extends Controller{
 		function uploadify(){
 			
 		}
+		
+	function resize_img($picture,$wgt,$hgt,$ratio,$backfunc){
+			
+		$image['filename'] 	= $picture['userfile']['name'];
+		$tmpName  			= $picture['userfile']['tmp_name'];
+		$fileSize 			= $picture['userfile']['size'];
+		
+		if(!$this->case_image($tmpName)):
+			$this->session->set_flashdata('operation_error','Картинка не загружена!<p>Формат картинки не поддерживается.</p><b>Проверьте формат и повторите загрузку снова.</b>');
+			$this->session->set_flashdata('operation_message','Ошибка при загрузке фото');
+			$this->session->set_flashdata('operation_saccessfull',' ');
+			redirect($backfunc);
+		endif;
+		if($fileSize > 10485760):
+			$this->session->set_flashdata('operation_error','Картинка не загружена!<p>Размер картинки более 10 Мб.</p><b>Проверьте формат и повторите загрузку снова.</b>');
+			$this->session->set_flashdata('operation_message','Ошибка при загрузке фото');
+			$this->session->set_flashdata('operation_saccessfull',' ');
+			redirect($backfunc);
+		endif;
+		chmod($tmpName, 0777);
+		$img = getimagesize($tmpName);		
+		$size_x = $img[0];
+		$size_y = $img[1];
+		
+		$wight = $wgt;
+		$height = $hgt; 
+		
+		if(($size_x < $wgt) or ($size_y < $hgt)):
+			$this->resize_image($tmpName,$wgt,$hgt,FALSE);
+			$file = fopen($tmpName,'rb');
+			$image['image'] = fread($file,filesize($tmpName));
+			fclose($file);
+			return $image;
+		endif;
+		if($size_x > $size_y)
+			$this->resize_image($tmpName,$size_x,$hgt,TRUE);
+		else
+			$this->resize_image($tmpName,$wgt,$size_y,TRUE);
+		$img = getimagesize($tmpName);		
+		$size_x = $img[0];
+		$size_y = $img[1];
+		switch ($img[2]){
+			case 1: $image_src = imagecreatefromgif($tmpName); break;
+			case 2: $image_src = imagecreatefromjpeg($tmpName); break;
+			case 3:	$image_src = imagecreatefrompng($tmpName); break;
+			default: return FALSE;	
+		}
+		$x = round(($size_x/2)-($wgt/2));
+		$y = round(($size_y/2)-($hgt/2));
+		if($x < 0):
+			$x = 0;	$wight = $size_x;
+		endif;
+		if($y < 0):
+			$y = 0; $height = $size_y;
+		endif;
+		
+		$image_dst = ImageCreateTrueColor($wight,$height);
+		imageCopy($image_dst,$image_src,0,0,$x,$y,$wgt,$hgt);
+		imagePNG($image_dst,$tmpName);
+		imagedestroy($image_dst);
+		imagedestroy($image_src);
+		
+		$file = fopen($tmpName,'rb');
+		$image['image'] = fread($file,filesize($tmpName));
+		fclose($file);
+		/*header('Content-Type: image/jpeg' );
+		echo $image['image'];
+		exit();*/
+		return $image;
+	}	//функция меняет размер фотографии;
+	
+	function case_image($file){
+			
+		$info = getimagesize($file);
+		switch ($info[2]):
+			case 1	: return TRUE;
+			case 2	: return TRUE;
+			case 3	: return TRUE;
+			default	: return FALSE;	
+		endswitch;
+	}			//функция проверяет, является файл - картинкой;
+											 
+	function resize_image($image,$wgt,$hgt,$ratio){
+			
+		$this->image_lib->clear();
+		$config['image_library'] 	= 'gd2';
+		$config['source_image']		= $image; 
+		$config['create_thumb'] 	= FALSE;
+		$config['maintain_ratio'] 	= $ratio;
+		$config['width'] 			= $wgt;
+		$config['height'] 			= $hgt;
+				
+		$this->image_lib->initialize($config);
+		$this->image_lib->resize();
+	}
+	
 	}
 ?>

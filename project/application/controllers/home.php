@@ -268,6 +268,20 @@ class Home extends Controller{
 				);
 		$this->load->view('page404',array('pagevalue'=>$pagevalue));
 	}			//функция выводит 404-ю ошибку;
+									 
+	function viewimage(){
+		
+		$section = $this->uri->segment(1);
+		$id = $this->uri->segment(3);
+		
+		if($section == 'album')
+			$image = $this->albummodel->get_image($id);
+		else
+			$image = $this->imagesmodel->get_image($id);
+		
+		header('Content-type: image/gif');
+		echo $image;
+	}		//функция выводит рисунок на страницу;
 		
 }	
 ?>

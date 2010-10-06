@@ -32,7 +32,7 @@
 					</div>
 					<div class="clear"></div>
 					<div id="internal_nav" class="grid_4 suffix_8">
-						<a href="<?php echo $pagevalue['baseurl'].'admin/albumsview'; ?>">Управление альбомами &nbsp;&rarr;</a>
+						<a href="<?php echo $pagevalue['baseurl'].'admin/album-gallary'; ?>">Управление альбомами &nbsp;&rarr;</a>
 					</div>
 					<div class="clear"></div>
 					<div id="internal_nav" class="grid_4 suffix_8">
@@ -59,6 +59,9 @@
 				<?php echo form_fieldset('Быстрый вызов функций',array('class'=>'fieldset')); ?>
 					<div id="internal_nav" class="grid_4">
 						<a href="<?php echo $pagevalue['baseurl'].'admin/event-new'; ?>">Создать новое событие &nbsp;&rarr;</a>
+					</div>
+					<div id="internal_nav" class="grid_4">
+						<a href="<?php echo $pagevalue['baseurl'].'admin/album-new'; ?>">Создать новый альбом &nbsp;&rarr;</a>
 					</div>
 				<?php echo form_fieldset_close(); ?>
 			</div>

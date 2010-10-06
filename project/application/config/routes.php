@@ -13,6 +13,8 @@ $route['event/:num'] 						= "home/event";
 $route['photo-albums/gallery/:num'] 		= "home/photo";
 $route['about'] 							= "home/about";
 $route['friends'] 							= "home/friends";
+$route['album/viewimage/:num']				= "home/viewimage";
+$route['photo/viewimage/:num']				= "home/viewimage";
 
 // routes - admin;
 $route['admin/login'] 						= "admin/login";
@@ -30,9 +32,16 @@ $route['admin/event-destroy/:num'] 			= "admin/eventdestroy";
 $route['admin/comment-insert'] 				= "admin/event";
 $route['admin/comment-edit/:num/:num']		= "admin/commentedit";
 $route['admin/comment-destroy/:num/:num'] 	= "admin/commentdestroy";
-
 $route['admin/comments']					= "admin/comments";
 $route['admin/comments/:num']				= "admin/comments";
+
+
+$route['admin/album-gallary']				= "admin/albums";
+$route['admin/photo-gallary/:num']			= "admin/photos";
+
+$route['admin/album-new']					= "admin/albumnew";
+$route['admin/album-edit/:num'] 			= "admin/albumedit";
+$route['admin/album-destroy/:num'] 			= "admin/albumdestroy";
 
 
 

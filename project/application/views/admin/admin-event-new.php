@@ -91,12 +91,12 @@
 								<div class="post-title">
 							<?php echo '<div>'.form_label('Оглавление записи:','eventlabel');
 									$attr = array(
-												'name' 		=> 'title',
-												'id'   		=> 'eventtitle',
-												'class'		=> 'textfield',
-												'value'		=> set_value('title'),
-												'maxlength'	=> '200',
-												'size' 		=> '40',
+											'name' 		=> 'title',
+											'id'   		=> 'eventtitle',
+											'class'		=> 'textfield',
+											'value'		=> set_value('title'),
+											'maxlength'	=> '200',
+											'size' 		=> '40',
 										);
 									echo form_input($attr).'</div>'; 
 									echo '<div>'.form_label(' Дата создания: ','eventlabel');    
@@ -113,7 +113,7 @@
 							</div>
 							<div class="text">
 								<div class="post-title">
-								<?php form_label('Содержимое записи:','eventlabel'); ?>
+								<?php echo form_label('Содержимое записи:','eventlabel'); ?>
 								</div>
 							<?php $attr =array(
 										'name' 	=> 'text',
@@ -121,7 +121,7 @@
 										'value'	=> set_value('text'),
 										'cols'	=> '81',
 										'rows' 	=> '10'
-									);
+								);
 								echo '<div>'.form_textarea($attr).'</div>';
 								$attr =array(
 										'name' 	=> 'btnsubmit',
