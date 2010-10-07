@@ -463,144 +463,98 @@ class Admin extends Controller{
 					'backpath' 	=> $backpath,
 					'baseurl' 	=> base_url()
 				);
+		$msg = $this->setmessage('','','',0);
 		$this->session->unset_userdata('commentlist');
 		if($this->input->post('btnsubmit')):
 			$this->form_validation->set_rules('title','"Название альбома"','required');
 			$this->form_validation->set_rules('photo_title','"Подпись"','required');
-			$this->form_validation->set_rules('annotation','"Описание альбома"','required');
+			$this->form_validation->set_rules('userfile','"Фото"','callback_userfile_check');
+			$this->form_validation->set_rules('annotation','"Описание альбома"','required|prep_for_form');
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
 			if (!$this->form_validation->run()):
 				$_POST['btnsubmit'] = NULL;
 				$this->albumnew();
 				return FALSE;
 			else:
-				$img = $this->resize_img($_FILES,186,186,FALSE,'admin/albumnew');
+				$img = $this->resize_img($_FILES,186,186,'admin/album-new');
 				$_POST['image'] = $img['image'];
 				$this->albummodel->insert_record($_POST);
 				$this->session->set_flashdata('operation_error',' ');
 				$this->session->set_flashdata('operation_message','Название альбома - '.$_POST['title']);
-				$this->session->set_flashdata('operation_saccessfull','Новая запись создана успешно');
+				$this->session->set_flashdata('operation_saccessfull','Альбом создан успешно');
 				redirect($backpath);
 			endif;
 		endif;
 		
-		$this->load->view('admin/admin-album-new',array('pagevalue'=>$pagevalue));
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+		
+		$this->load->view('admin/admin-album-new',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+	}
+
+	function albumedit($album_id = 0,$error = FALSE){
+		
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Редактирование альбома",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'formuri' 	=> $this->uri->uri_string(),
+					'backpath' 	=> $backpath,
+					'valid'		=> $error,
+					'baseurl' 	=> base_url()
+				);
+				
+		if($album_id == 0 or empty($album_id))
+			$album_id = $this->uri->segment(3);
+		$this->session->unset_userdata('commentlist');
+		$album = $this->albummodel->album_record($album_id);
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('title','"Название альбома"','required');
+			$this->form_validation->set_rules('photo_title','"Подпись"','required');
+			if($_FILES['userfile']['error'] != 4)
+				$this->form_validation->set_rules('userfile','"Фото"','callback_userfile_check');
+			$this->form_validation->set_rules('annotation','"Описание альбома"','required|prep_for_form');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->albumedit($album_id,TRUE);
+				return FALSE;
+			else:
+				if($_FILES['userfile']['error'] != 4):
+					$img = $this->resize_img($_FILES,186,186,'admin/album-new');
+					$_POST['image'] = $img['image'];
+				else:
+					$_POST['image'] = $album['alb_photo'];
+				endif;
+				$this->albummodel->update_record($_POST);
+				$this->session->set_flashdata('operation_error',' ');
+				$this->session->set_flashdata('operation_message','Название альбома - '.$_POST['title']);
+				$this->session->set_flashdata('operation_saccessfull','Альбом изменен успешно');
+				redirect($backpath);
+			endif;
+		endif;
+		
+        $this->load->view('admin/admin-album-edit',array('pagevalue'=>$pagevalue,'album'=>$album));
 	}
 		
-		function albuminsert(){			
+	function albumdestroy(){
 			
-			$this->form_validation->set_rules('name', '"Каталог альбома"', 'required|callback_albumname_check');
-			$this->form_validation->set_rules('title', '"Название"', 'required');
-			$this->form_validation->set_rules('photo_title', '"Подпись"', 'required');
-			$this->form_validation->set_rules('annotation', '"Описание альбома"', 'required');
-			
-			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
-			
-			if ($this->form_validation->run() == FALSE){
-				$this->albumnew();
-				$this->load->view('footer');
-				return FALSE;
-			}
-			$uploaddirpath = getcwd().'/images';
-			
-			$albumdir = getcwd().'/albums/'.$_POST['name'];
-			mkdir($albumdir) or die('Не возможно создать каталог!'); 
-			
-			$config['upload_path'] = $uploaddirpath;
-			$config['allowed_types'] = 'gif|jpg|png';
-			$config['remove_spaces'] = TRUE;
-			$config['overwrite'] = FALSE;			
-							
-			$this->upload->initialize($config);
-							
-			if ($this->upload->do_upload()){    
-				
-				$upload_data = $this->upload->data();			
-				$_POST['userfile'] = 'images/'.$upload_data['file_name'];
-				
-				$config['image_library'] = 'gd2';
-				$config['source_image']	= getcwd().'/images/'.$upload_data['file_name']; 
-				$config['create_thumb'] = FALSE;
-				$config['maintain_ratio'] = FALSE;
-				$config['width']	 = 186;
-				$config['height']	= 186;
-				
-				$this->image_lib->initialize($config);
-				if (!$this->image_lib->resize()){
-					// Обработка если рисунок не изменился.
-					$_POST['userfile'] = 'images/albumempty.png';	
-				}											
-			}else{
-				// обработка ошибки загрузки или не указан
-				$_POST['userfile'] = 'images/albumempty.png';	
-			}		
-							
-			$this->albummodel->insert_record_to_album($_POST);
-			redirect('admin/albumsview');	
-		}
+		$backpath = $this->session->userdata('backpage');
+		$album_id = $this->uri->segment(3);
+		$album = $this->albummodel->album_record($album_id);
+		$this->albummodel->delete_record($album_id);
+		$this->imagesmodel->images_delete($album_id);
+		$this->session->set_flashdata('operation_error',' ');
+		$this->session->set_flashdata('operation_message','Название удаленного альбома - '.$album['alb_title']);
+		$this->session->set_flashdata('operation_saccessfull','Альбом удален успешно');
+		redirect($backpath);	
+	}
 		
-		function albumname_check($name){
-			
-			$albumdir = getcwd().'/albums/'.$name;
-			if (is_dir($albumdir)){
-				$this->form_validation->set_message('albumname_check', 'Каталог альбома уже существует.');
-				return FALSE;
-			}else
-				return TRUE;
-		}
 		
-		function albumdestroy(){
-			
-			$id = $this->uri->segment(3);			
-			$data = $this->albummodel->get_album_info($id);			
-			
-			foreach ($data as $album){
-				
-				$dirpath = getcwd().'/albums/'.$album->alb_name.'/';
-				if(is_dir($dirpath)){				
-					foreach (new DirectoryIterator($dirpath) as $file){
-						if (!$file->isDot())						
-							if(!unlink($dirpath.$file)){							
-								//обработка события если не удалился файл						
-							}					
-					}
-					if(!rmdir($dirpath)){					
-						//обработка события если не удалилась папка
-					}
-				} 
-				
-				$photopath = getcwd().'/'.$album->alb_photo;
-				
-				if ($album->alb_photo != 'images/albumempty.png')
-					if (file_exists($photopath))
-						if(!unlink($photopath)){							
-							//обработка события если не удалился файл						
-						}					
-			}
-			$this->imagesmodel->image_album_delete($id);
-			$this->albummodel->delete_record_to_album($id);
-			redirect('admin/albumsview');
-		}
-		
-		function albumedit(){
-			$pagevalue = array(
-							'title' => "Samoilovi.ru | Администрирование | Редактирование альбома",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			$id = $this->uri->segment(3);
-			$albuminfo = $this->albummodel->get_album_info($id);
-			foreach ($albuminfo as $album){
-				$oldphoto = $album->alb_photo;	
-			}
-        	$this->load->view('album_edit',array(
-											'pagevalue'=>$pagevalue,
-											'albuminfo'=>$albuminfo,
-											'oldphoto'=>$oldphoto
-											));
-			$this->load->view('footer');	
-		}
 		
 		function albumupdate(){			
 			
@@ -1117,25 +1071,33 @@ class Admin extends Controller{
 		function uploadify(){
 			
 		}
+
+	
+	function userfile_check($file){
 		
-	function resize_img($picture,$wgt,$hgt,$ratio,$backfunc){
+		$tmpName = $_FILES['userfile']['tmp_name'];
+		
+		if ($_FILES['userfile']['error'] == 4):
+			$this->form_validation->set_message('userfile_check','Не указана фотография!');
+			return FALSE;
+		endif;
+		if(!$this->case_image($tmpName)):
+			$this->form_validation->set_message('userfile_check','Формат картинки не поддерживается!');
+			return FALSE;
+		endif;
+		if($_FILES['userfile']['error'] == 1):
+			$this->form_validation->set_message('userfile_check','Размер картинки более 10 Мб!');
+			return FALSE;
+		endif;
+		return TRUE;
+	}
+	
+	function resize_img($picture,$wgt,$hgt,$backfunc){
 			
 		$image['filename'] 	= $picture['userfile']['name'];
 		$tmpName  			= $picture['userfile']['tmp_name'];
 		$fileSize 			= $picture['userfile']['size'];
 		
-		if(!$this->case_image($tmpName)):
-			$this->session->set_flashdata('operation_error','Картинка не загружена!<p>Формат картинки не поддерживается.</p><b>Проверьте формат и повторите загрузку снова.</b>');
-			$this->session->set_flashdata('operation_message','Ошибка при загрузке фото');
-			$this->session->set_flashdata('operation_saccessfull',' ');
-			redirect($backfunc);
-		endif;
-		if($fileSize > 10485760):
-			$this->session->set_flashdata('operation_error','Картинка не загружена!<p>Размер картинки более 10 Мб.</p><b>Проверьте формат и повторите загрузку снова.</b>');
-			$this->session->set_flashdata('operation_message','Ошибка при загрузке фото');
-			$this->session->set_flashdata('operation_saccessfull',' ');
-			redirect($backfunc);
-		endif;
 		chmod($tmpName, 0777);
 		$img = getimagesize($tmpName);		
 		$size_x = $img[0];

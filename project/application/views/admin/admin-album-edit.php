@@ -59,6 +59,16 @@
 				<?php echo form_error('photo_title').'<div class="clear"></div>'; ?>
 				<?php echo form_error('userfile').'<div class="clear"></div>'; ?>
 				<?php echo form_error('annotation').'<div class="clear"></div>'; ?>
+				<?php
+					if($pagevalue['valid']):
+						$title 			= set_value('title');
+						$photo_title 	= set_value('photo_title');
+						$annotation 	= set_value('annotation');
+					else:
+						$title 			= $album['alb_title'];
+						$photo_title 	= $album['alb_photo_title'];
+						$annotation 	= $album['alb_annotation'];
+					endif; ?>
 				<div id="blog" class="grid_16">
 					<div class="blog-top"> 
 						<div class="blog-tl"> </div>
@@ -69,32 +79,34 @@
 					<div class="blog-center"> 
 						<div class="blog-l"> </div>
 						<div class="blog-content">
-						<?php echo form_open_multipart('admin/album-new'); ?>
+						<?php echo form_open_multipart($pagevalue['formuri']); ?>
 							<div class="post-header">
 								<div class="post-title">
+								<?php echo form_hidden('id',$album['alb_id']); ?>
+								<?php echo form_hidden('amt',$album['alb_amt']); ?>
 								<?php echo '<div>'.form_label('Название альбома:','albumlabel');?>
 								<?php $attr = array(
 										'name' 		=> 'title',
-										'id'   		=> 'albumtitle',
+              							'id'   		=> 'albumtitle',
 										'class'		=> 'textfield',
-										'value'		=> set_value('title'),
-										'maxlength'	=> '12',
+              							'value'		=> $title,
+              							'maxlength'	=> '12',
 										'size' 		=> '30'
-									);
+									); 
 									echo form_input($attr).'</div>'; ?>
 								<?php echo '<div>'.form_label('Фото:','albumlabel'); ?>
 								<?php $attr = array(
-										'type' 	   => 'file',
-										'name' 	   => 'userfile',
-										'id'  	   => 'uploadimage',
-										'accept'   => 'image/jpeg,png,gif',
+										'type' 	   	=> 'file',
+										'name' 	   	=> 'userfile',
+										'id'  	   	=> 'uploadimage',
+										'accept'   	=> 'image/jpeg,png,gif',
 									);
 									echo form_input($attr); ?>
 								<?php echo form_label('&nbsp; Подпись: ','albumlabel'); ?>
 								<?php $attr = array(
 										'name' 		=> 'photo_title',
 										'id'   		=> 'photo-title',
-										'value'		=> set_value('photo_title'),
+										'value'		=> $photo_title,
 										'class'		=> 'textfield',
 										'maxlength'	=> '100',
 										'size' 		=> '30'
@@ -109,17 +121,17 @@
 							<?php $attr =array(
 										'name' 		=> 'annotation',
 										'id'   		=> 'annotation',
-										'value'		=> set_value('annotation'),
+										'value'		=> $annotation,
 										'class'		=> 'textfield',
 										'cols'		=> '81',
 										'rows' 		=> '5'
 								);
 								echo form_textarea($attr);
 								$attr =array(
-										'name' 	=> 'btnsubmit',
-										'id'   	=> 'btnsubmit',
-										'class' => 'senden',
-										'value'	=> 'Создать запись'
+										'name' 		=> 'btnsubmit',
+										'id'   		=> 'btnsubmit',
+										'class' 	=> 'senden',
+										'value'		=> 'Создать запись'
 								);
 								echo form_submit($attr);?>
 							<?php echo form_close(); ?>

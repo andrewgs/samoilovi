@@ -3,12 +3,9 @@
 	class Imagesmodel extends Model{
 	
 		var $img_id = 0;
-		var $img_src = '';
-		var $img_type = '';
 		var $img_title = '';
-		var $img_object = '';
-		var $img_image = '';
-		var $img_big_image = '';
+		var $img_album = '';
+		var $img_src = '';
 		
 		function Imagesmodel(){			
 			
@@ -34,25 +31,19 @@
 		
 		function insert_record($data){
 			
-			$this->img_src = $data['file'];
-			$this->img_type = $data['type'];
-			$this->img_title = $data['imagetitle'];
-			$this->img_object = $data['object'];
-			$this->img_image = $data['images'];
-			$this->img_big_image = $data['bigimages'];
+			$this->img_title 	= $data['imagetitle'];
+			$this->img_album 	= $data['album'];
+			$this->img_src 		= $data['images'];
 			
 			$this->db->insert('images', $this);
 		}
 		
 		function update_record($data){
 			
-			$this->img_id = $data['id'];
-			$this->img_src = $data['file'];
-			$this->img_type = $data['type'];
-			$this->img_title = $data['imagetitle'];
-			$this->img_object = $data['object'];
-			$this->img_image = $data['images'];
-			$this->img_big_image = $data['bigimages'];
+			$this->img_id 		= $data['id'];
+			$this->img_title 	= $data['imagetitle'];
+			$this->img_album 	= $data['album'];
+			$this->img_src 		= $data['images'];
 			
 			$this->db->where('img_id',$this->img_id);
 			$this->db->update('images', $this);
@@ -130,12 +121,12 @@
 		
 		function image_delete($id){
 			
-			$this->db->delete('images', array('img_id' => $id));
+			$this->db->delete('images',array('img_id'=>$id));
 		}
 		
-		function image_type_delete($type,$object){
+		function images_delete($album_id){
 			
-			$this->db->delete('images', array('img_object' => $object,'img_type' => $type));
+			$this->db->delete('images',array('img_album'=>$album_id));
 		}
 	}
 ?>

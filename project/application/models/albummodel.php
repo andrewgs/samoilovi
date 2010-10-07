@@ -30,11 +30,13 @@ class Albummodel extends Model{
 	}
 	
 	
-	function get_album_info($id){
+	function album_record($album_id){
 	
-		$this->db->where('alb_id',$id);
-		$query = $this->db->get('albums', 1);
-		return $query->result();
+		$this->db->where('alb_id',$album_id);
+		$query = $this->db->get('albums',1);
+		$data = $query->result_array();
+		if(isset($data[0])) return $data[0];
+		return NULL;
 	}
 	
 	function increment_amt_to_album($id){
@@ -63,12 +65,12 @@ class Albummodel extends Model{
 		$this->db->insert('albums',$this);
 	}
 	
-	function delete_record_to_album($id){
+	function delete_record($album_id){
 		
-		$this->db->delete('album', array('alb_id' => $id));
+		$this->db->delete('albums',array('alb_id'=>$album_id));
 	}
 	
-	function update_record_to_album($data){
+	function update_record($data){
 	
 		$this->alb_id 			= $data['id'];
 		$this->alb_title 		= $data['title'];
@@ -77,11 +79,11 @@ class Albummodel extends Model{
 		$this->alb_photo 		= $data['image'];
 		$this->alb_photo_title 	= $data['photo_title'];
 		
-		if (strlen($this->alb_annotation) > 125)
-			$this->alb_annotation = substr($this->alb_annotation,0,125);
+		if (mb_strlen($this->alb_annotation,'UTF-8') > 125)
+			$this->alb_annotation = mb_substr($this->alb_annotation,0,125,'UTF-8');
 		
-		$this->db->where('alb_id', $this->alb_id);
-		$this->db->update('albums', $this);	
+		$this->db->where('alb_id',$this->alb_id);
+		$this->db->update('albums',$this);	
 	}
 }
 ?>

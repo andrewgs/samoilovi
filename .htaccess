@@ -3,7 +3,7 @@ Options +FollowSymLinks
 Options -Indexes
 DirectoryIndex index.php
 php_flag register_globals on
-php_value upload_max_filesize 5M
+php_value upload_max_filesize 10M
 RewriteEngine On
 RewriteBase /samoilovi.ru
 RewriteCond $1 !^(index\.php|images|robots\.txt|public)
