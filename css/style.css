@@ -273,3 +273,35 @@ div.lenghtstatus{
 	color:#3a3;
 	border-color:#c7f2c8;
 }
+button#showuploadif,
+button#showform{
+	font: bold 13px/17px Calibri, arial;
+	margin-bottom: 5px;
+	margin-left: -5px;
+	width: 210px;
+	height: 2.2em;
+}
+
+fieldset.multiupload{
+	border: 3px double #b5b5b5;
+	background-color: #5f795b;
+	hight: 250px;
+	padding: 8px;
+	padding-bottom:0px;
+	margin: 5px;
+	display:none;
+	width: 400px;
+	height: 75px;
+}
+
+fieldset.uploadform{
+	border: 3px double #b5b5b5;
+	background-color: #5f795b;
+	hight: 250px;
+	padding: 8px;
+	padding-bottom:0px;
+	margin: 5px;
+	display:none;
+	width: 400px;
+	height: 130px;
+}

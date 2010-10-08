@@ -274,11 +274,17 @@ class Home extends Controller{
 		$section = $this->uri->segment(1);
 		$id = $this->uri->segment(3);
 		
-		if($section == 'album')
-			$image = $this->albummodel->get_image($id);
-		else
-			$image = $this->imagesmodel->get_image($id);
-		
+		switch ($section){
+			
+			case 'album' :	$image = $this->albummodel->get_image($id);
+							break;
+			case 'small' :	$image = $this->imagesmodel->small_image($id);
+							break;
+			case 'big'	 : 	$image = $this->imagesmodel->big_image($id);
+							break;
+			case 'friend': 	$image = $this->friendsmodel->get_image($id);
+							break;
+		}
 		header('Content-type: image/gif');
 		echo $image;
 	}		//функция выводит рисунок на страницу;

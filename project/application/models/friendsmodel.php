@@ -13,7 +13,7 @@
 			parent::Model();
 		}
 		
-		function get_friends(){
+		function friends_records(){
 			
 			$this->db->order_by('fr_id asc');
 			$query = $this->db->get('friends');
@@ -25,6 +25,15 @@
 			$this->db->where('fr_id',$id);
 			$query = $this->db->get('friends', 1);
 			return $query->result();
+		}
+		
+		function get_image($friend_id){
+		
+			$this->db->where('fr_id',$friend_id);
+			$this->db->select('fr_image');
+			$query = $this->db->get('friends');
+			$data = $query->result_array();
+			return $data[0]['fr_image'];
 		}
 		
 		function insert_record_to_friends($data,$social){

@@ -11,7 +11,7 @@
 			parent::Model();
 		}
 		
-		function get_social(){
+		function social_records(){
 			
 			$this->db->order_by('soc_id asc');
 			$query = $this->db->get('social');

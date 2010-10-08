@@ -9,7 +9,6 @@
     <meta name="description" content=<?php echo $pagevalue['desc']; ?>/>
     <meta name="keywords" content=<?php echo $pagevalue['keyword']; ?>/>
     <title><?php echo $pagevalue['title']; ?></title> 
-		        	
 <?php
 	define("CRLT", "\n");
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/reset.css" type="text/css" />'.CRLT; 

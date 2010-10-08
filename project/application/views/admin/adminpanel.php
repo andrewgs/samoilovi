@@ -36,7 +36,7 @@
 					</div>
 					<div class="clear"></div>
 					<div id="internal_nav" class="grid_4 suffix_8">
-						<a href="<?php echo $pagevalue['baseurl'].'admin/friendsview'; ?>">Управление друзьями &nbsp;&rarr;</a>
+						<a href="<?php echo $pagevalue['baseurl'].'admin/friends'; ?>">Карточки друзей &nbsp;&rarr;</a>
 					</div>
 				</div>
 				<div class="grid_6">
@@ -57,12 +57,18 @@
 					echo '<div class="clear"></div>';
 				endif; ?>
 				<?php echo form_fieldset('Быстрый вызов функций',array('class'=>'fieldset')); ?>
-					<div id="internal_nav" class="grid_4">
-						<a href="<?php echo $pagevalue['baseurl'].'admin/event-new'; ?>">Создать новое событие &nbsp;&rarr;</a>
+					<div class="grid_12">
+						<div id="internal_nav" class="grid_4">
+							<a href="<?php echo $pagevalue['baseurl'].'admin/event-new'; ?>">Создать новое событие &nbsp;&rarr;</a>
+						</div>
+						<div id="internal_nav" class="grid_4">
+							<a href="<?php echo $pagevalue['baseurl'].'admin/album-new'; ?>">Создать новый альбом &nbsp;&rarr;</a>
+						</div>
+						<div id="internal_nav" class="grid_3">
+							<a href="<?php echo $pagevalue['baseurl'].'admin/friend-new'; ?>">Создать карточку друга &nbsp;&rarr;</a>
+						</div>
 					</div>
-					<div id="internal_nav" class="grid_4">
-						<a href="<?php echo $pagevalue['baseurl'].'admin/album-new'; ?>">Создать новый альбом &nbsp;&rarr;</a>
-					</div>
+					<div class="clear"></div>
 				<?php echo form_fieldset_close(); ?>
 			</div>
 		</div>

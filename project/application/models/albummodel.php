@@ -29,7 +29,6 @@ class Albummodel extends Model{
 		return $data[0]['alb_photo'];
 	}
 	
-	
 	function album_record($album_id){
 	
 		$this->db->where('alb_id',$album_id);
@@ -39,16 +38,16 @@ class Albummodel extends Model{
 		return NULL;
 	}
 	
-	function increment_amt_to_album($id){
-		$this->db->set('alb_amt', 'alb_amt+1', FALSE);
+	function insert_photo($id){
+		$this->db->set('alb_amt','alb_amt+1', FALSE);
 		$this->db->where('alb_id',$id);
 		$this->db->update('albums');
 	}
 	
-	function decrement_amt_to_album($id){
-		$this->db->set('alb_amt', 'alb_amt-1', FALSE);
+	function delete_photo($id){
+		$this->db->set('alb_amt','alb_amt-1',FALSE);
 		$this->db->where('alb_id',$id);
-	$this->db->update('albums');
+		$this->db->update('albums');
 	}
 		
 	function insert_record($data){

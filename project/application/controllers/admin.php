@@ -217,7 +217,7 @@ class Admin extends Controller{
 		
 		$this->load->view('admin/admin-event',array('pagevalue'=>$pagevalue,'event'=>$event,'comments'=>$comments,'user'=>$userinfo,'msg'=>$msg));
 	}
-			
+	
 	function eventnew(){
 	
 		$backpath = $this->session->userdata('backpage');
@@ -353,7 +353,7 @@ class Admin extends Controller{
 		$comment['cmnt_usr_date'] = $this->operation_date_slash($comment['cmnt_usr_date']);				 
 		$this->load->view('admin/admin-comment-edit',array('pagevalue'=>$pagevalue,'comment'=>$comment));
 	}	
-		
+	
 	function commentdestroy(){
 		
 		$event_id = $this->uri->segment(3);
@@ -370,7 +370,7 @@ class Admin extends Controller{
 		$this->session->set_flashdata('operation_saccessfull','Комментарий удален успешно');
 		redirect($backpath);
 	}
-		
+	
 	function comments(){
 		
 		$backpath = $this->session->userdata('backpage');
@@ -417,7 +417,7 @@ class Admin extends Controller{
 		
 		$this->load->view('admin/comments',array('pagevalue'=>$pagevalue,'comments'=>$comments,'pages'=>$pages,'msg'=>$msg));
 	}
-			
+	
 	function setmessage($error,$saccessfull,$message,$status){
 			
 		$this->message['error'] = $error;
@@ -476,8 +476,7 @@ class Admin extends Controller{
 				$this->albumnew();
 				return FALSE;
 			else:
-				$img = $this->resize_img($_FILES,186,186,'admin/album-new');
-				$_POST['image'] = $img['image'];
+				$_POST['image'] = $this->resize_img($_FILES,186,186);
 				$this->albummodel->insert_record($_POST);
 				$this->session->set_flashdata('operation_error',' ');
 				$this->session->set_flashdata('operation_message','Название альбома - '.$_POST['title']);
@@ -524,12 +523,10 @@ class Admin extends Controller{
 				$this->albumedit($album_id,TRUE);
 				return FALSE;
 			else:
-				if($_FILES['userfile']['error'] != 4):
-					$img = $this->resize_img($_FILES,186,186,'admin/album-new');
-					$_POST['image'] = $img['image'];
-				else:
+				if($_FILES['userfile']['error'] != 4)
+					$_POST['image'] = $this->resize_img($_FILES,186,186);
+				else
 					$_POST['image'] = $album['alb_photo'];
-				endif;
 				$this->albummodel->update_record($_POST);
 				$this->session->set_flashdata('operation_error',' ');
 				$this->session->set_flashdata('operation_message','Название альбома - '.$_POST['title']);
@@ -540,7 +537,7 @@ class Admin extends Controller{
 		
         $this->load->view('admin/admin-album-edit',array('pagevalue'=>$pagevalue,'album'=>$album));
 	}
-		
+
 	function albumdestroy(){
 			
 		$backpath = $this->session->userdata('backpage');
@@ -553,175 +550,132 @@ class Admin extends Controller{
 		$this->session->set_flashdata('operation_saccessfull','Альбом удален успешно');
 		redirect($backpath);	
 	}
+	
+	function photos($album_id = 0,$error = FALSE){
 		
+		$backpath = $this->session->userdata('backpage');
+		if($album_id == 0 or empty($album_id))
+			$album_id = $this->uri->segment(3);
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Галлерея",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'backpath' 	=> $backpath,
+					'valid'		=> $error,
+					'album'		=> $album_id,
+					'baseurl' 	=> base_url(),
+					'basepath' 	=> getcwd()
+			);
+		$images = array();
+		$msg = $this->setmessage('','','',0);
+		$this->session->unset_userdata('commentlist');
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('imagetitle','"Описание"','required');
+			$this->form_validation->set_rules('userfile','"Фото"','callback_userfile_check');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->photos($album_id,TRUE);
+				return FALSE;
+			else:
+				$_POST['big_image'] = $this->resize_img($_FILES,640,480);
+				$_POST['image'] = $this->resize_img($_FILES,186,186);
+				$this->imagesmodel->insert_record($_POST);
+				$this->albummodel->insert_photo($_POST['album']);
+				$this->session->set_flashdata('operation_error',' ');
+				$this->session->set_flashdata('operation_message','Название фотографии - '.$_FILES['userfile']['name']);
+				$this->session->set_flashdata('operation_saccessfull','Фотография загружена успешно');
+				redirect('admin/photo-gallary/'.$_POST['album']);
+			endif;
+		endif;
+		$images = $this->imagesmodel->get_data($album_id);
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+
+		$this->load->view('admin/admin-photo-gallery',array('pagevalue'=>$pagevalue,'images'=>$images,'msg'=>$msg));
+	}
+	
+	function multiupload(){
 		
+		if (!empty($_FILES)):
 		
-		function albumupdate(){			
+			print_r($_FILES); exit();
+			$image['album']			= $this->uri->segment(3);
+			$album 					= $this->albummodel->album_record($image['album']);
+			$image['imagetitle'] 	= $album['alb_photo_title'];
+			$image['big_image'] 	= $this->resize_img($_FILES,640,480);
+			$image['image'] 		= $this->resize_img($_FILES,186,186);
 			
-			$uploaddirpath = getcwd().'/images';
+			$this->imagesmodel->insert_record($image);
+			$this->albummodel->insert_photo($image['album']);
+		else:
+			$this->session->set_flashdata('operation_error','Отсутствуют данные для загрузки!');
+			$this->session->set_flashdata('operation_message',' ');
+			$this->session->set_flashdata('operation_saccessfull','При загрузке фотографий произошла ошибка!');
+			redirect('admin/photo-gallary/'.$_POST['album']);
+			return FALSE;
+		endif;
+	}
+	
+	function photodestroy(){
 			
-			$config['upload_path'] = $uploaddirpath;
-			$config['allowed_types'] = 'gif|jpg|png';
-			$config['remove_spaces'] = TRUE;
-			$config['overwrite'] = FALSE;			
-							
-			$this->upload->initialize($config);
-							
-			if ($this->upload->do_upload()){    
-				
-				$upload_data = $this->upload->data();			
-				$_POST['userfile'] = 'images/'.$upload_data['file_name'];
-				
-				if($_POST['oldphoto']!=$_POST['userfile'] and $_POST['oldphoto'] != 'images/albumempty.png'){
-					
-					$photopath = getcwd().'/'.$_POST['oldphoto'];
-					if (file_exists($photopath))
-						if(!unlink($photopath)){							
-							//обработка события если не удалился файл						
-						}					
-				}
-				$config['image_library'] = 'gd2';
-				$config['source_image']	= getcwd().'/images/'.$upload_data['file_name']; 
-				$config['create_thumb'] = FALSE;
-				$config['maintain_ratio'] = FALSE;
-				$config['width']	 = 186;
-				$config['height']	= 186;
-				
-				$this->image_lib->initialize($config);
-				if (!$this->image_lib->resize()){
-				
-					if($_POST['oldphoto'] != 'images/albumempty.png'){
-					
-						$photopath = getcwd().'/'.$_POST['oldphoto'];
-						if (file_exists($photopath))
-							if(!unlink($photopath)){							
-								//обработка события если не удалился файл						
-							}					
-					}
-					// Обработка если рисунок не изменился.
-					$_POST['userfile'] = 'images/albumempty.png';	
-				}											
-			}else{
-			
-				// обработка ошибки загрузки или не указан
-				$_POST['userfile'] = $_POST['oldphoto'];	
-			}
-			$this->albummodel->update_record_to_album($_POST);
-			redirect('admin/albumsview');
-		}
+		$image_id = $this->uri->segment(3);
+		$image = $this->imagesmodel->get_image($image_id);
+		$backpath = 'admin/photo-gallary/'.$image['img_album'];
+		$this->imagesmodel->image_delete($image_id);
+		$this->albummodel->delete_photo($image['img_album']);
+		$this->session->set_flashdata('operation_error',' ');
+		$this->session->set_flashdata('operation_message','Фотография - "'.$image['img_title'].'"');
+		$this->session->set_flashdata('operation_saccessfull','Фотография удалена успешно');
+		redirect($backpath);	
+	}
+	
+	function friends(){
 		
-		function addphoto(){
-			
-			$data1 = array(
-							  'title' => "Samoilovi.ru | Администрирование | Загрузка картинок",
-							   'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-						);
-			
-			$msg = $this->setmessage('','','Выбирите картинку и нажмите кнопку "Загрузить".<br />(Поддерживаемые форматы: jpeg, png, gif)',1);
-			$alb_id = $this->uri->segment(3);
-			$data2['form'] = 'admin/album/'.$alb_id.'/addphoto';
-			$data2['back'] = 'admin/album/'.$alb_id.'/images';
-			
-			if(isset($_POST['btsabmit'])){
-				
-				$albuminfo = $this->albummodel->get_album_info($alb_id);
-				
-				foreach ($albuminfo as $album){
-					
-					$uploadpath = 'albums/'.$album->alb_name;
-					$uploaddir = getcwd().'/'.$uploadpath;
-					$amt = $album->alb_amt;
-					$_POST['alb_id'] = $album->alb_id;
-					$alb_title = $album->alb_photo_title;
-				}			
-				$config['upload_path'] = $uploaddir;
-				$config['allowed_types'] = 'gif|jpg|png';
-				$config['remove_spaces'] = TRUE;
-				$config['overwrite'] = TRUE;
-				
-				$this->upload->initialize($config);
-				
-				$msg = $this->setmessage('Картинка не загружена!<br />Возможные ошибки:<p>- Вы не выбрали картинку</p><p>- Размер картинки более 5 Мб.</p><p>- Формат картинки не поддерживается.</p><p>- Отсутствуют права на загрузку файлов.</p><br /><b>Проверьте условия и повторите загрузку снова.</b>','','Ошибка загрузки!',1);
-				
-				if ($this->upload->do_upload()){    
-					
-					$upload_data = $this->upload->data();			
-					
-					$config['image_library'] = 'gd2';
-					$config['source_image']	= $uploaddir.'/'.$upload_data['file_name']; 
-					$config['create_thumb'] = FALSE;
-					$config['maintain_ratio'] = TRUE;
-					$config['width']	 = 640;
-					$config['height']	= 480;
-					
-					$this->image_lib->initialize($config);
-					$this->image_lib->resize();
-					
-					$this->albummodel->increment_amt_to_album($alb_id);
-					$_POST['file'] = $uploadpath.'/'.$upload_data['file_name'];
-					
-					if(!isset($_POST['imagetitle']) or empty($_POST['imagetitle']))
-						$_POST['imagetitle'] = $alb_title;
-						
-					$this->imagesmodel->insert_record($_POST);
-					
-					$textmessage = 'Картинка '.$upload_data['file_name'].' загружена в каталог '.$uploadpath;
-					$msg = $this->setmessage('',$textmessage,'Загрузка выполнилась успешно!',1);
-				}
-			}
-			
-			$this->load->view('photo_add',array('data1' => $data1,'data2'=>$data2,'msg'=>$msg));
-			$this->load->view('footer');
-		}
+		$pagevalue = array(
+					'title' => "Samoilovi.ru | Администрирование | Страница друзей",
+					'desc' => "\"\"",
+					'keyword' => "\"\"",
+					'baseurl' => base_url(),
+					'basepath' => getcwd()
+			);
+		$this->session->set_userdata('backpage','admin/friends');
+		$msg = $this->setmessage('','','',0);
+		$this->session->unset_userdata('commentlist');
 		
-		function friendsview(){
+		$friends = array();
+		$socials = array();
+		$friends = $this->friendsmodel->friends_records();
+		$social = $this->socialmodel->social_records();
 		
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Страница друзей",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd()
-						);
-			$data2 = $this->friendsmodel->get_friends_info_list();
-			$data3 = $this->socialmodel->get_friend_social_info_list();
-			
-			$i = 0; $y = 0; $key = 0;
-			$data4[$i][$y] = array(
-								'id' => 0,
-							  'name' => '',
-						'profession' => '',
-						    'social' => 0,
-							  'note' => '',
-							 'image' => ''
-								);
-			foreach ($data2 as $friends){
-				
-				$key += 1;				
-				$data4[$i][$y]['id'] = $friends->fr_id;
-				$data4[$i][$y]['name'] = $friends->fr_name;
-				$data4[$i][$y]['profession'] = $friends->fr_profession;
-				$data4[$i][$y]['social'] = $friends->fr_social;
-				$data4[$i][$y]['note'] = $friends->fr_note;
-				$data4[$i][$y]['image'] = $friends->fr_image;
-				
-				if ($key % 3 == 0){
-					$i += 1;
-					$y = 0;
-				}else{
-					$y += 1;	
-				}
-			}
-			$this->load->view('friends_view',array(
-												'data1' => $data1,
-												'data2' => $data4,
-												'data3' => $data3,
-												'data4' => $key
-												));
-			$this->load->view('footer');
-		} 
+		$i = 0; $y = 0; $key = 0;
+		$friendcard[$i][$y] = array('id'=>0,'name'=>'','profession'=>'','social'=>0,'note'=>'','image'=>'');
+		for($fr = 0;$fr < count($friends);$fr++):
+			$key++;				
+			$friendcard[$i][$y]['id'] 			= $friends[$fr]['fr_id'];
+			$friendcard[$i][$y]['name'] 		= $friends[$fr]['fr_name'];
+			$friendcard[$i][$y]['profession'] 	= $friends[$fr]['fr_profession'];
+			$friendcard[$i][$y]['social'] 		= $friends[$fr]['fr_social'];
+			$friendcard[$i][$y]['note'] 		= $friends[$fr]['fr_note'];
+			$friendcard[$i][$y]['image'] 		= $friends[$fr]['fr_image'];
+			if($key % 3 == 0):
+				$i++; $y = 0;
+			else:
+				$y++;	
+			endif;
+		endfor;
+		
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
+		
+		$this->load->view('admin/admin-friends',array('pagevalue'=>$pagevalue,'friendcard'=>$friendcard,'social'=>$social,'key'=>$key,'msg'=>$msg));
+	} 
 		
 		function friendnew(){
 			
@@ -1028,51 +982,7 @@ class Admin extends Controller{
 			}
 		}
 
-		function imageslist(){
-			
-			$pagevalue = array(
-							'title' => "Samoilovi.ru | Администрирование | Просмотр фотографий",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd()
-						);
-			$alb_id = $this->uri->segment(3);
-			
-			$images = array();
-			$images = $this->imagesmodel->get_data($alb_id);
-			
-			$this->load->view('photo_list',array('pagevalue'=>$pagevalue,'images'=>$images,'album'=>$alb_id));
-			$this->load->view('footer');	
-		}
-		
-		function deletephoto(){
-			
-			$alb_id = $this->uri->segment(3);
-			$img_id = $this->uri->segment(5);
-			$redirect = 'admin/album/'.$alb_id.'/images';
-			
-			$photoinfo = $this->imagesmodel->get_image($img_id);
-			
-			foreach($photoinfo as $photo){
-				$photopath = getcwd().'/'.$photo->img_src;
-			}
-			
-			$this->imagesmodel->image_delete($img_id);
-			if (file_exists($photopath))
-				if(!unlink($photopath)){
-				//обработка события если не удалился файл						
-			}
-			$this->albummodel->decrement_amt_to_album($alb_id);
-			
-			redirect($redirect);
-		}
 
-		function uploadify(){
-			
-		}
-
-	
 	function userfile_check($file){
 		
 		$tmpName = $_FILES['userfile']['tmp_name'];
@@ -1092,11 +1002,11 @@ class Admin extends Controller{
 		return TRUE;
 	}
 	
-	function resize_img($picture,$wgt,$hgt,$backfunc){
+	function resize_img($picture,$wgt,$hgt){
 			
-		$image['filename'] 	= $picture['userfile']['name'];
-		$tmpName  			= $picture['userfile']['tmp_name'];
-		$fileSize 			= $picture['userfile']['size'];
+		$image	 	= $picture['userfile']['name'];
+		$tmpName	= $picture['userfile']['tmp_name'];
+		$fileSize	= $picture['userfile']['size'];
 		
 		chmod($tmpName, 0777);
 		$img = getimagesize($tmpName);		
@@ -1109,7 +1019,7 @@ class Admin extends Controller{
 		if(($size_x < $wgt) or ($size_y < $hgt)):
 			$this->resize_image($tmpName,$wgt,$hgt,FALSE);
 			$file = fopen($tmpName,'rb');
-			$image['image'] = fread($file,filesize($tmpName));
+			$image = fread($file,filesize($tmpName));
 			fclose($file);
 			return $image;
 		endif;
@@ -1124,7 +1034,6 @@ class Admin extends Controller{
 			case 1: $image_src = imagecreatefromgif($tmpName); break;
 			case 2: $image_src = imagecreatefromjpeg($tmpName); break;
 			case 3:	$image_src = imagecreatefrompng($tmpName); break;
-			default: return FALSE;	
 		}
 		$x = round(($size_x/2)-($wgt/2));
 		$y = round(($size_y/2)-($hgt/2));
@@ -1142,7 +1051,7 @@ class Admin extends Controller{
 		imagedestroy($image_src);
 		
 		$file = fopen($tmpName,'rb');
-		$image['image'] = fread($file,filesize($tmpName));
+		$image = fread($file,filesize($tmpName));
 		fclose($file);
 		/*header('Content-Type: image/jpeg' );
 		echo $image['image'];
@@ -1160,7 +1069,7 @@ class Admin extends Controller{
 			default	: return FALSE;	
 		endswitch;
 	}			//функция проверяет, является файл - картинкой;
-											 
+		 
 	function resize_image($image,$wgt,$hgt,$ratio){
 			
 		$this->image_lib->clear();

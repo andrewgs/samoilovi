@@ -80,7 +80,7 @@
 											'id'  		 => 'imagetitle',
 											'value'		 => '',
 											'maxlength'	 => '100',
-		              						'size' 		 => '60'
+											'size' 		 => '60'
 											);
 									echo '<div>'.form_input($attr).'</div>';
 								?>
@@ -93,17 +93,17 @@
 								$attr = array(
 											'type' => 'file',
 											'name' => 'userfile',
-              								'id'   => 'photos',
-										  'accept' => 'image/jpeg,png,gif',
-              							'maxlength'=> '250',
-              								'size' => '50'
+											'id'   => 'photos',
+											'accept' => 'image/jpeg,png,gif',
+											'maxlength'=> '250',
+											'size' => '50'
 										);
 								echo '<div>'.form_input($attr).'</div>';
 								echo '<hr>';
 								$attr =array(
 										'name' => 'btsabmit',
-              							'id'   => 'btnsabmit',
-              							'value'=> 'Загрузить',
+										'id'   => 'btnsabmit',
+										'value'=> 'Загрузить',
 										'class' => 'senden'
 								);
 								echo '<div id="bt_submit">'.form_submit($attr).'</div>';							
@@ -118,8 +118,7 @@
 						<div class="blog-bl"></div>
 						<div class="blog-b"></div>
 						<div class="blog-br"></div>						
-					 </div>
-					 
+						</div>
 					<div class="clear"></div>
 				</div>
 			</div>

@@ -9,28 +9,18 @@
     <meta name="description" content=<?php echo $pagevalue['desc']; ?>/>
     <meta name="keywords" content=<?php echo $pagevalue['keyword']; ?>/>
     <title><?php echo $pagevalue['title']; ?></title> 
-		        	
 <?php
 	define("CRLT", "\n");
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/reset.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css" />'.CRLT;
-	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/pirobox.css">'.CRLT;
 	
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>';
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/pirobox.min.js"></script>';
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.confirm.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.maxlength-min.js"></script>';
 ?> 
 	<script type="text/javascript"> 
 		$(document).ready(function(){
-			$().piroBox({
-				my_speed: 400,
-				bg_alpha: 0.1,
-				slideShow : true,
-				slideSpeed : 4,
-				close_all : '.piro_close,.piro_overlay' 
-			});
 			$("div.blog-content").each(function(){ $(this).parents("div.blog-center:first").css('height',$(this).height()+30); });
 			$('a.delete').confirm();
 			$('#annotation').maxlength({

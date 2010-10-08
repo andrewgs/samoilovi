@@ -14,7 +14,8 @@ $route['photo-albums/gallery/:num'] 		= "home/photo";
 $route['about'] 							= "home/about";
 $route['friends'] 							= "home/friends";
 $route['album/viewimage/:num']				= "home/viewimage";
-$route['photo/viewimage/:num']				= "home/viewimage";
+$route['small/viewimage/:num']				= "home/viewimage";
+$route['big/viewimage/:num']				= "home/viewimage";
 
 // routes - admin;
 $route['admin/login'] 						= "admin/login";
@@ -34,23 +35,17 @@ $route['admin/comment-edit/:num/:num']		= "admin/commentedit";
 $route['admin/comment-destroy/:num/:num'] 	= "admin/commentdestroy";
 $route['admin/comments']					= "admin/comments";
 $route['admin/comments/:num']				= "admin/comments";
-
-
 $route['admin/album-gallary']				= "admin/albums";
-$route['admin/photo-gallary/:num']			= "admin/photos";
-
 $route['admin/album-new']					= "admin/albumnew";
 $route['admin/album-edit/:num'] 			= "admin/albumedit";
 $route['admin/album-destroy/:num'] 			= "admin/albumdestroy";
 
+$route['admin/photo-gallary/:num']			= "admin/photos";
+$route['admin/photo-destory/:num']			= "admin/photodestroy";
+$route['admin/photo-multiupload']			= "admin/multiupload";
 
-
-$route['admin/album/:num/addphoto'] = "/admin/addphoto/";
-$route['admin/album/:num/deletephoto/:num'] = "/admin/deletephoto/";
-$route['admin/album/:num/images'] = "/admin/imageslist/";
-
-$route['album/:num/images'] = "/home/imageslist/";
-$route['admin/uploadify'] = "admin/uploadify/";
+$route['admin/friends']						= "admin/friends";
+$route['admin/friend-new']					= "admin/friendnew";
 
 //other
 $route[':any']			 = "home/page404";
