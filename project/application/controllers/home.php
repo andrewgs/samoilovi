@@ -76,7 +76,7 @@ class Home extends Controller{
 				);
 		$this->session->set_userdata('backpage','photo-albums');
 		$albums = array();
-		$albums = $this->albummodel->albums_list();	 
+		$albums = $this->albummodel->albums_records();	 
 		$this->load->view('albums',array('pagevalue'=>$pagevalue,'albums'=>$albums));
 	}
 			
@@ -130,12 +130,34 @@ class Home extends Controller{
 					'baseurl' 	=> base_url(),
 					'basepath' 	=> getcwd(),
 					'backpath' 	=> $backpath,
+					'formuri' 	=> $this->uri->uri_string(),
 					'admin' 	=> $this->usrinfo['status']
 				);
 		if($event_id == 0 or empty($event_id))
 			$event_id = $this->uri->segment(2);
 		$event = array();
 		$comments = array();
+		if($this->input->post('op')):
+			$this->form_validation->set_rules('user_name','"Ваше имя"','required');
+			$this->form_validation->set_rules('user_email','"E-mail"','required|valid_email');
+			$this->form_validation->set_rules('cmnt_text','"Комментарий"','required');
+			$this->form_validation->set_rules('homepage','"Веб-сайт"','');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if(!$this->form_validation->run()):
+				$_POST['op'] = NULL;
+				$this->event($_POST['event_id'],TRUE);
+				return FALSE;
+			else:
+				if(isset($_POST['homepage']) and !empty($_POST['homepage']))
+					if(strncmp(strtolower($_POST['homepage']),'http://',7) != 0)
+						$_POST['homepage'] = 'http://'.$_POST['homepage'];
+				$this->eventsmodel->insert_comments($_POST['event_id']);			
+				$this->commentsmodel->insert_record($_POST);
+				$_POST['op'] = NULL;
+				redirect($pagevalue['formuri']);
+				return TRUE;
+			endif;
+		endif;
 		$event = $this->eventsmodel->event_record($event_id);
 		if(isset($event) and !empty($event))
 			$event['evnt_date'] = $this->operation_date($event['evnt_date']);
@@ -150,40 +172,35 @@ class Home extends Controller{
 	function friends(){
 	
 		$pagevalue = array(
-						'title' => "Samoilovi.ru | Страница друзей",
-						'desc' 		=> "\"веб-сайт семьи Самойловых\"",
-						'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
-						'baseurl' 	=> base_url(),
-						'basepath' 	=> getcwd(),
-						'admin' 	=> $this->usrinfo['status']
-					);
+					'title' => "Samoilovi.ru | Страница друзей",
+					'desc' 		=> "\"веб-сайт семьи Самойловых\"",
+					'keyword' 	=> "\"семейный сайт, любовь, семейные новости, отношения\"",
+					'baseurl' 	=> base_url(),
+					'basepath' 	=> getcwd(),
+					'admin' 	=> $this->usrinfo['status']
+				);
 		$this->session->set_userdata('backpage','friends');
 		$friends = array();
-		$social = array();
-		
-		$friends = $this->friendsmodel->get_friends();
-		$social = $this->socialmodel->get_social();
-		
+		$socials = array();
+		$friends = $this->friendsmodel->friends_records();
+		$social = $this->socialmodel->social_records();
 		$i = 0; $y = 0; $key = 0;
-		$card[$i][$y] = array(	'id' => 0, 'name' => '',
-						'profession' => '','social' => 0,
-						  	'note' => '','image' => '');
-							
-		for($i = 0;$i < count($friends);$i++):			
-			$key += 1;				
-			$card[$i][$y]['id'] 		= $friends[$i]['fr_id'];
-			$card[$i][$y]['name'] 		= $friends[$i]['fr_name'];
-			$card[$i][$y]['profession'] = $friends[$i]['fr_profession'];
-			$card[$i][$y]['social']	 	= $friends[$i]['fr_social'];
-			$card[$i][$y]['note'] 		= $friends[$i]['fr_note'];
-			$card[$i][$y]['image'] 		= $friends[$i]['fr_image'];			
-			if ($key % 3 == 0):
-				$i += 1; $y = 0;
+		$friendcard[$i][$y] = array('id'=>0,'name'=>'','profession'=>'','social'=>0,'note'=>'','image'=>'');
+		for($fr = 0;$fr < count($friends);$fr++):
+			$key++;				
+			$friendcard[$i][$y]['id'] 			= $friends[$fr]['fr_id'];
+			$friendcard[$i][$y]['name'] 		= $friends[$fr]['fr_name'];
+			$friendcard[$i][$y]['profession'] 	= $friends[$fr]['fr_profession'];
+			$friendcard[$i][$y]['social'] 		= $friends[$fr]['fr_social'];
+			$friendcard[$i][$y]['note'] 		= $friends[$fr]['fr_note'];
+			$friendcard[$i][$y]['image'] 		= $friends[$fr]['fr_image'];
+			if($key % 3 == 0):
+				$i++; $y = 0;
 			else:
-				$y += 1;	
+				$y++;	
 			endif;
 		endfor;
-		$this->load->view('friends',array('pagevalue'=>$pagevalue,'card'=>$card,'social'=>$social,'key'=>$key));
+		$this->load->view('friends',array('pagevalue'=>$pagevalue,'friendcard'=>$friendcard,'social'=>$social,'key'=>$key));
 	}
 			
 	function about(){
@@ -247,15 +264,13 @@ class Home extends Controller{
 					'backpath' 	=> $backpath,
 					'admin' 	=> $this->usrinfo['status']
 					);
-		$album_id = $this->uri->segment(2);
-		$this->session->set_userdata('backpage','photo-albums/gallery/'.$album_id);
-		
+		$album_id = $this->uri->segment(3);
+		$this->session->set_userdata('backpage','photo-albums/photo-gallery/'.$album_id);
 		$images = array();
-		$images = $this->imagesmodel->get_images($alb_id);
-		
-		$this->load->view('images',array('data1'=>$data1,'data2'=>$data2,'data3'=>$alb_id));
+		$images = $this->imagesmodel->get_data($album_id);
+		$this->load->view('photo-gallery',array('pagevalue'=>$pagevalue,'images'=>$images));
 	}
-	
+
 	function page404(){
 		
 		$pagevalue = array(

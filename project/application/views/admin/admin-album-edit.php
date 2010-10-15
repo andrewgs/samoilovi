@@ -59,8 +59,7 @@
 				<?php echo form_error('photo_title').'<div class="clear"></div>'; ?>
 				<?php echo form_error('userfile').'<div class="clear"></div>'; ?>
 				<?php echo form_error('annotation').'<div class="clear"></div>'; ?>
-				<?php
-					if($pagevalue['valid']):
+				<?php if($pagevalue['valid']):
 						$title 			= set_value('title');
 						$photo_title 	= set_value('photo_title');
 						$annotation 	= set_value('annotation');

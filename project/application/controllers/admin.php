@@ -195,7 +195,7 @@ class Admin extends Controller{
 				$this->eventsmodel->insert_comments($_POST['event_id']);			
 				$this->commentsmodel->insert_record($_POST);
 				$_POST['op'] = NULL;
-				$this->event($_POST['event_id'],FALSE);
+				redirect($pagevalue['formuri']);
 				return TRUE;
 			endif;
 		endif;
@@ -493,7 +493,7 @@ class Admin extends Controller{
 		
 		$this->load->view('admin/admin-album-new',array('pagevalue'=>$pagevalue,'msg'=>$msg));
 	}
-
+	
 	function albumedit($album_id = 0,$error = FALSE){
 		
 		$backpath = $this->session->userdata('backpage');
@@ -548,7 +548,7 @@ class Admin extends Controller{
 		$this->session->set_flashdata('operation_error',' ');
 		$this->session->set_flashdata('operation_message','Название удаленного альбома - '.$album['alb_title']);
 		$this->session->set_flashdata('operation_saccessfull','Альбом удален успешно');
-		redirect($backpath);	
+		redirect($backpath);
 	}
 	
 	function photos($album_id = 0,$error = FALSE){
@@ -677,311 +677,253 @@ class Admin extends Controller{
 		$this->load->view('admin/admin-friends',array('pagevalue'=>$pagevalue,'friendcard'=>$friendcard,'social'=>$social,'key'=>$key,'msg'=>$msg));
 	} 
 		
-		function friendnew(){
-			
-			$pagevalue = array(
-							'title' => "Samoilovi.ru | Администрирование | Добавление карточки друга",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url()
-						);
-			$this->load->view('friend_new',array('pagevalue'=>$pagevalue));
-			$this->load->view('footer');
-		}
+	function friendnew(){
 		
-		function friendinsert(){
-			
-			$this->form_validation->set_rules('name', '"Имя друга"', 'required');
-			$this->form_validation->set_rules('profession', '"Профессия"', 'required');
-			$this->form_validation->set_rules('note', '"Описание друга"', 'required');
-			$this->form_validation->set_rules('hrefsocial1', '"Ссылка на страницу"', 'prep_url');
-			$this->form_validation->set_rules('hrefsocial2', '"Ссылка на страницу"', 'prep_url');
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Создание карточки друга",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'backpath' 	=> $backpath,
+					'baseurl' 	=> base_url()
+				);
+		
+		$msg = $this->setmessage('','','',0);
+		$this->session->unset_userdata('commentlist');
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('name','"Имя друга"','required');
+			$this->form_validation->set_rules('profession','"Профессия"','required');
+			$this->form_validation->set_rules('userfile','"Фото"','callback_userfile_check');
+			$this->form_validation->set_rules('note','"Описание друга"','required');
+			$this->form_validation->set_rules('social1','"Соц.сеть"','');
+			$this->form_validation->set_rules('social2','"Соц.сеть"','');
+			$this->form_validation->set_rules('hrefsocial1','"Ссылка"','prep_url');
+			$this->form_validation->set_rules('hrefsocial2','"Ссылка"','prep_url');
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
-			
-			if ($this->form_validation->run() == FALSE){
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
 				$this->friendnew();
 				return FALSE;
-			}
-			
-			$config['upload_path'] = getcwd().'/images';
-			$config['allowed_types'] = 'gif|jpg|png';
-			$config['remove_spaces'] = TRUE;
-			$config['overwrite'] = FALSE;			
-							
-			$this->upload->initialize($config);
-							
-			if ($this->upload->do_upload()){    
+			else:
+				$tmpfile = $_FILES['userfile']['tmp_name'];
+				$this->resize_image($tmpfile,100,70,TRUE);
+				$file = fopen($tmpfile,'rb');
+				$_POST['image'] = fread($file,filesize($tmpfile));
+				fclose($file);
+				$_POST['social'] = 0;
+				$social[0] = array('friend_id'=>0,'social'=>'','href'=>'','flag'=>0);
+				$social[1] = array('friend_id'=>0,'social'=>'','href'=>'','flag'=>0);							
+				if(!empty($_POST['social1']) and !empty($_POST['hrefsocial1'])):
+					$_POST['social'] += 1;
+					$socstatus = 1;
+					$social[0]['friend_id'] = 0;
+					$social[0]['social'] 	= $_POST['social1'];
+					$social[0]['href'] 		= $_POST['hrefsocial1'];
+					$social[0]['flag'] 		= TRUE;
+				endif;
+				if(!empty($_POST['social2']) and !empty($_POST['hrefsocial2'])):
+					$_POST['social'] += 1;
+					$socstatus = 2;
+					$social[1]['friend_id'] = 0;
+					$social[1]['social'] 	= $_POST['social2'];
+					$social[1]['href'] 		= $_POST['hrefsocial2'];
+					$social[1]['flag']		= TRUE;
+				endif;
+				$friend_id = $this->friendsmodel->insert_record($_POST);				
+				if(isset($socstatus)):
+					for ($i = 0; $i < $socstatus; $i++):
+						if (!$social[$i]['flag']) continue;
+						$social[$i]['friend_id'] = $friend_id;
+						$this->socialmodel->insert_record($social[$i]);				
+					endfor;
+				endif;	
+				$this->session->set_flashdata('operation_error',' ');
+				$this->session->set_flashdata('operation_message','Имя друга - '.$_POST['name']);
+				$this->session->set_flashdata('operation_saccessfull','Карточка создана успешно');
+				redirect($backpath);
+			endif;
+		endif;
+		$flasherr = $this->session->flashdata('operation_error');
+		$flashmsg = $this->session->flashdata('operation_message');
+		$flashsaf = $this->session->flashdata('operation_saccessfull');
+		if($flasherr && $flashmsg && $flashsaf)
+			$msg = $this->setmessage($flasherr,$flashsaf,$flashmsg,1);
 				
-				$upload_data = $this->upload->data();			
-				$_POST['userfile'] = 'images/'.$upload_data['file_name'];
-				
-				$config['image_library'] = 'gd2';
-				$config['source_image']	= getcwd().'/'.$_POST['userfile']; 
-				$config['create_thumb'] = FALSE;
-				$config['maintain_ratio'] = TRUE;
-				$config['height'] = 70;
-				$config['width'] = 100;
-								
-				$this->image_lib->initialize($config);
-				if (!$this->image_lib->resize()){
-					// Обработка если рисунок не изменился.
-					$_POST['userfile'] = 'images/friendempty.png';	
-				}											
-			}else{
-				// обработка ошибки загрузки или не указан
-				$_POST['userfile'] = 'images/friendempty.png';	
-			}
-			
-			$social = 0;
-			
-			$data[0] = array('friend_id' => 0,'social' => '','href' => '','flag' => 0);
-			$data[1] = array('friend_id' => 0,'social' => '','href' => '','flag' => 0);
-						
-			if(empty($_POST['note'])) $_POST['note'] = 'Описание не указано';
-						
-			if(!empty($_POST['social1']) and !empty($_POST['hrefsocial1'])){
-			
-				$social += 1;
-				$cntsocial = 1;
-				$data[0]['friend_id'] = 0;
-				$data[0]['social'] = $_POST['social1'];
-				$data[0]['href'] = $_POST['hrefsocial1'];
-				$data[0]['flag'] = 1;
-			}
-				
-			if(!empty($_POST['social2']) and !empty($_POST['hrefsocial2'])){
-			
-				$social += 1;
-				$cntsocial = 2;
-				$data[1]['friend_id'] = 0;
-				$data[1]['social'] = $_POST['social2'];
-				$data[1]['href'] = $_POST['hrefsocial2'];
-				$data[1]['flag'] = 1;
-			}
-			
-			$friend_id = $this->friendsmodel->insert_record_to_friends($_POST,$social);
-			
-			if (isset($cntsocial))
-				for ($i = 0; $i < $cntsocial; $i++){
-					if ($data[$i]['flag'] == 0) continue;
-					$data[$i]['friend_id'] = $friend_id;
-					$this->socialmodel->insert_record_to_social($data[$i]);				
-				}
-			redirect('admin/friendsview');
-		}
+		$this->load->view('admin/admin-friend-new',array('pagevalue'=>$pagevalue,'msg'=>$msg));
+	}
 		
-		function frienddestroy(){
-			
-			$id = $this->uri->segment(3);			
-			$data = $this->friendsmodel->get_friend_info($id);
-					
-			foreach ($data as $friend){
-			
-				if(($friend->fr_image!='images/friendempty.png')and(file_exists(getcwd().'/'.$friend->fr_image)))
-					if(!unlink(getcwd().'/'.$friend->fr_image)){							
-						//обработка ошибки удаления файла						
-					}									
-			}
-			$this->socialmodel->delete_record_to_social($id);
-			$this->friendsmodel->delete_record_to_friend($id);
-			redirect('admin/friendsview');
-		}
+	function friendedit($friend_id = 0,$error = FALSE){
 		
-		function friendedit(){
-			
-			$id = $this->uri->segment(3);
-			$pagevalue = array(
-							'title' => "Samoilovi.ru | Администрирование | Редактирование карточки друга",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-							'basepath' => getcwd()
-						);
-			$friendinfo = $this->friendsmodel->get_friend_info($id);
-			$socinfo = $this->socialmodel->get_friend_social_info($id);
-			
-			$sociallist[0] = array('id' => 0, 'social' => '', 'href' => '');
-			$sociallist[1] = array('id' => 0, 'social' => '', 'href' => '');			
-			$i = 0;			
-			foreach ($socinfo as $social){
-				
-				$sociallist[$i]['id'] = $social->soc_id;
-				$sociallist[$i]['social'] = $social->soc_name;
-				$sociallist[$i]['href'] = $social->soc_href;
-				$i +=1;
-			}			
-			$this->load->view('friend_edit',array('pagevalue'=>$pagevalue,'friendinfo'=>$friendinfo,'sociallist' => $sociallist));
-			$this->load->view('footer');
-		}
-		
-		function friendupdate(){
-			
-			if(empty($_POST['name'])){
-				
-				redirect('admin/friendedit/'.$_POST['fr_id']);
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Редактирование карточки друга",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'formuri' 	=> $this->uri->uri_string(),
+					'backpath' 	=> $backpath,
+					'valid'		=> $error,
+					'baseurl' 	=> base_url()
+				);
+		if($friend_id == 0 or empty($friend_id))
+			$friend_id = $this->uri->segment(3);
+		$sociallist[0]  = array('id'=>'','social'=>'','href'=>'');
+		$sociallist[1]  = array('id'=>'','social'=>'','href'=>'');
+		$friend  		= array();
+		$socials  		= array();
+		$friend 		= $this->friendsmodel->friend_record($friend_id);
+		$socials 		= $this->socialmodel->friend_social($friend_id);
+		if($this->input->post('btnsubmit')):
+			$this->form_validation->set_rules('name','"Имя друга"','required');
+			$this->form_validation->set_rules('profession','"Профессия"','required');
+			if($_FILES['userfile']['error'] != 4)
+				$this->form_validation->set_rules('userfile','"Фото"','callback_userfile_check');
+			$this->form_validation->set_rules('note','"Описание друга"','required');
+			$this->form_validation->set_rules('social1','"Соц.сеть"','');
+			$this->form_validation->set_rules('social2','"Соц.сеть"','');
+			$this->form_validation->set_rules('hrefsocial1','"Ссылка"','prep_url');
+			$this->form_validation->set_rules('hrefsocial2','"Ссылка"','prep_url');
+			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
+			if (!$this->form_validation->run()):
+				$_POST['btnsubmit'] = NULL;
+				$this->friendedit($friend_id,TRUE);
 				return FALSE;
-			}
-			
-			$config['upload_path'] = getcwd().'/images';
-			$config['allowed_types'] = 'gif|jpg|png';
-			$config['remove_spaces'] = TRUE;
-			$config['overwrite'] = FALSE;			
-							
-			$this->upload->initialize($config);
-							
-			if ($this->upload->do_upload()){    
+			else:
+				if($_FILES['userfile']['error'] != 4):
+					$tmpfile = $_FILES['userfile']['tmp_name'];
+					$this->resize_image($tmpfile,100,70,TRUE);
+					$file = fopen($tmpfile,'rb');
+					$_POST['image'] = fread($file,filesize($tmpfile));
+					fclose($file);
+				else:
+					$_POST['image'] = $friend['fr_image'];
+				endif;
+				$_POST['social'] = 0;			
+				$social[0] = array('id'=>0,'friend_id'=>0,'social'=>'','href'=>'','flag'=>0);
+				$social[1] = array('id'=>0,'friend_id'=>0,'social'=>'','href'=>'','flag'=>0);
+				if(!empty($_POST['social1']) and !empty($_POST['hrefsocial1'])):
+					$_POST['social'] 		+= 1;
+					$socstatus 				= 1;
+					$social[0]['friend_id'] = $_POST['id'];
+					$social[0]['social'] 	= $_POST['social1'];
+					$social[0]['href'] 		= $_POST['hrefsocial1'];
+					$social[0]['flag'] 		= 1;
+				endif;
+				if(!empty($_POST['social2']) and !empty($_POST['hrefsocial2'])):
+					$_POST['social'] 		+= 1;
+					$socstatus 				= 2;
+					$social[1]['friend_id'] = $_POST['id'];
+					$social[1]['social'] 	= $_POST['social2'];
+					$social[1]['href'] 		= $_POST['hrefsocial2'];
+					$social[1]['flag'] 		= 1;
+				endif;
+				$this->friendsmodel->reset_social($_POST['id']);
+				$this->socialmodel->delete_records($_POST['id']);
+				$this->friendsmodel->update_record($_POST);			
+				if(isset($socstatus)):
+					for ($i = 0; $i < $socstatus; $i++):
+						if ($social[$i]['flag'] == 0)continue;
+						$this->socialmodel->insert_record($social[$i]);				
+					endfor;
+				endif;
 				
-				$upload_data = $this->upload->data();			
-				$_POST['userfile'] = 'images/'.$upload_data['file_name'];
-				
-				if($_POST['oldphoto']!=$_POST['userfile'] and $_POST['oldphoto'] != 'images/friendempty.png'){
-					
-					$photopath = getcwd().'/'.$_POST['oldphoto'];
-					if (file_exists($photopath))
-						if(!unlink($photopath)){							
-							//обработка события если не удалился файл						
-						}					
-				}
-				$config['image_library'] = 'gd2';
-				$config['source_image']	= getcwd().'/'.$_POST['userfile']; 
-				$config['create_thumb'] = FALSE;
-				$config['maintain_ratio'] = TRUE;
-				$config['height'] = 70;
-				$config['width'] = 100;
-								
-				$this->image_lib->initialize($config);
-				if (!$this->image_lib->resize()){
-					
-					if($_POST['oldphoto'] != 'images/friendempty.png'){
-					
-						$photopath = getcwd().'/'.$_POST['oldphoto'];
-						if (file_exists($photopath))
-							if(!unlink($photopath)){							
-							//обработка события если не удалился файл						
-						}					
-					}
-					// Обработка если рисунок не изменился.
-					$_POST['userfile'] = 'images/friendempty.png';	
-				}											
-			}else{
-			
-				// обработка ошибки загрузки или не указан
-				$_POST['userfile'] = $_POST['oldphoto'];	
-			}
-			
-			if(empty($_POST['note'])) $_POST['note'] = 'Описание не указано';
-						
-			$social = 0;			
-			$data[0] = array('id' => 0, 'friend_id' => 0,'social' => '','href' => '','flag' => 0);
-			$data[1] = array('id' => 0, 'friend_id' => 0,'social' => '','href' => '','flag' => 0);
-									
-			if(!empty($_POST['social1']) and !empty($_POST['hrefsocial1'])){
-			
-				$social += 1;
-				$cntsocial = 1;
-				$data[0]['id'] = $_POST['soc_id1'];
-				$data[0]['friend_id'] = $_POST['fr_id'];
-				$data[0]['social'] = $_POST['social1'];
-				$data[0]['href'] = $_POST['hrefsocial1'];
-				$data[0]['flag'] = 1;
-			}
-				
-			if(!empty($_POST['social2']) and !empty($_POST['hrefsocial2'])){
-			
-				$social += 1;
-				$cntsocial = 2;
-				$data[1]['id'] = $_POST['soc_id2'];
-				$data[1]['friend_id'] = $_POST['fr_id'];
-				$data[1]['social'] = $_POST['social2'];
-				$data[1]['href'] = $_POST['hrefsocial2'];
-				$data[1]['flag'] = 1;
-			}
-			$this->friendsmodel->reset_social_count($_POST['fr_id']);
-			$this->socialmodel->delete_record_to_social($_POST['fr_id']);
-			
-			$this->friendsmodel->update_record_to_friends($_POST,$social);			
-			if (isset($cntsocial))
-				for ($i = 0; $i < $cntsocial; $i++){
-					if ($data[$i]['flag'] == 0)continue;
-					$data[$i]['friend_id'] = $_POST['fr_id'];
-				//	if($this->socialmodel->update_record_to_social($data[$i]));
-					$this->socialmodel->insert_record_to_social($data[$i]);				
-				}
-			redirect('admin/friendsview');
-		}
+				$this->session->set_flashdata('operation_error',' ');
+				$this->session->set_flashdata('operation_message','Имя друга - '.$_POST['name']);
+				$this->session->set_flashdata('operation_saccessfull','Карточка изменена успешно');
+				redirect($backpath);
+			endif;
+		endif;
+		for($i = 0; $i < count($socials); $i++):
+			$sociallist[$i]['id'] 		= $socials[$i]['soc_id'];
+			$sociallist[$i]['social'] 	= $socials[$i]['soc_name'];
+			$sociallist[$i]['href'] 	= $socials[$i]['soc_href'];
+		endfor;
+		$this->load->view('admin/admin-friend-edit',array('pagevalue'=>$pagevalue,'friend'=>$friend,'socials'=>$sociallist));
+	}
 		
-		function operation_date($field){
-			
-			$list = preg_split("/-/",$field);
-			$nmonth = $this->months[$list[1]];
-			$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
-			$replacement = "\$5 $nmonth \$1 г."; 
-			return preg_replace($pattern, $replacement,$field);
-		}
+	function frienddestroy(){
 		
-		function operation_date_slash($field){
-			
-			$list = preg_split("/-/",$field);
-			$nmonth = $this->months[$list[1]];
-			$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
-			$replacement = "\$5/\$3/\$1"; 
-			return preg_replace($pattern, $replacement,$field);
-		}
-			
-		
+		$backpath = $this->session->userdata('backpage');
+		$friend_id = $this->uri->segment(3);
+		$friend = $this->friendsmodel->friend_record($friend_id);
+		$this->friendsmodel->delete_record($friend_id);
+		$this->socialmodel->delete_records($friend_id);
+		$this->session->set_flashdata('operation_error',' ');
+		$this->session->set_flashdata('operation_message','Удаленна карточка - '.$friend['fr_name']);
+		$this->session->set_flashdata('operation_saccessfull','Карточка удалена успешно');
+		redirect($backpath);
+	}
 	
-
-		function profile(){
+	function operation_date($field){
 			
-			$data1 = array(
-							'title' => "Samoilovi.ru | Администрирование | Редактирование профиля",
-							'desc' => "\"\"",
-							'keyword' => "\"\"",
-							'baseurl' => base_url(),
-						);
-			$login = $this->session->userdata('login');
-			$data2 = $this->authentication->get_users_info($login);
-			
-        	$this->load->view('profile',array('data1'=>$data1, 'data2'=>$data2));
-			$this->load->view('footer');
-		}
+		$list = preg_split("/-/",$field);
+		$nmonth = $this->months[$list[1]];
+		$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
+		$replacement = "\$5 $nmonth \$1 г."; 
+		return preg_replace($pattern, $replacement,$field);
+	}
 		
-		function profileupdate(){
+	function operation_date_slash($field){
 			
+		$list = preg_split("/-/",$field);
+		$nmonth = $this->months[$list[1]];
+		$pattern = "/(\d+)(-)(\w+)(-)(\d+)/i";
+		$replacement = "\$5/\$3/\$1"; 
+		return preg_replace($pattern, $replacement,$field);
+	}
+			
+	function profile(){
+	
+		$backpath = $this->session->userdata('backpage');
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Смена пароля администраторва",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'formuri' 	=> $this->uri->uri_string(),
+					'backpath' 	=> $backpath,
+					'baseurl' 	=> base_url()
+				);
+		$msg = $this->setmessage('','','',0);
+		if($this->input->post('btnsubmit')):
 			$this->form_validation->set_rules('oldpass','"Старый пароль"','required|callback_oldpass_check');
 			$this->form_validation->set_rules('newpass','"Новый пароль"','required|min_length[6]|matches[confirmpass]');
 			$this->form_validation->set_rules('confirmpass','"Подтверждение пароля"','required');
 			$this->form_validation->set_error_delimiters('<div class="message">','</div>');
-			$this->form_validation->set_message('min_length', 'Минимальная длина пароля — 6 символов.');
-			$this->form_validation->set_message('matches', 'Поля "Новый пароль" и "Подтверждение пароля" должны совпадать');
-			
-			if ($this->form_validation->run() == FALSE){
-				$this->profile();
+			$this->form_validation->set_message('min_length','Минимальная длина пароля — 6 символов.');
+			$this->form_validation->set_message('matches','Поля "Новый пароль" и "Подтверждение пароля" должны совпадать');
+			if ($this->form_validation->run() == FALSE):
+				$msg = $this->setmessage('Не выполнены условия.','','Ошибка при изменении профиля.',1);
+				$login = $this->session->userdata('login');
+				$userinfo = $this->authentication->user_info($login);
+        		$this->load->view('admin/profile',array('pagevalue'=>$pagevalue,'userinfo'=>$userinfo,'msg'=>$msg));
 				return FALSE;
-			}else{
+			else:
 				$_POST['pass_crypt'] = $this->encrypt->encode($_POST['newpass']);
 				$this->authentication->changepassword($_POST);
-				redirect('admin');
-			}
-		}
-		
-		function oldpass_check($pass){
-			
-			$login = $this->session->userdata('login');
-			$userinfo = $this->authentication->get_users_info($login);
-			
-			foreach ($userinfo as $user){
-			
-				$userpass = $user->usr_password;
-			}
-			if(md5($pass) == $userpass){
+				$this->session->set_flashdata('operation_saccessfull','Пароль администратора изменен.');
+				redirect('admin/profile');
 				return TRUE;
-			}else{
-				$this->form_validation->set_message('oldpass_check', 'Введен не верный пароль!');
-				return FALSE;
-			}
-		}
+			endif;
+		endif;
+		$login = $this->session->userdata('login');
+		$userinfo = $this->authentication->user_info($login);
+		$flashmsg = $this->session->flashdata('operation_saccessfull');
+		if(isset($flashmsg) and !empty($flashmsg))
+			$msg = $this->setmessage('','',$flashmsg,1);
+        $this->load->view('admin/profile',array('pagevalue'=>$pagevalue,'userinfo'=>$userinfo,'msg'=>$msg));
+	}				//функция производит смену пароля администратора;
 
+	function oldpass_check($pass){
+			
+		$login = $this->session->userdata('login');
+		$userinfo = $this->authentication->user_info($login);
+			
+		if(md5($pass) == $userinfo['usr_password']):
+			return TRUE;
+		else:
+			$this->form_validation->set_message('oldpass_check','Введен не верный пароль!');
+			return FALSE;
+		endif;
+	}	//функция проверяет старый пароль перед изменением;
 
 	function userfile_check($file){
 		

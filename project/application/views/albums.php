@@ -14,22 +14,9 @@
 	<?php echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/reset.css" type="text/css" />'.CRLT; ?>
 	<?php echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" />'.CRLT; ?>
 	<?php echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css"/>'.CRLT; ?>
-	<?php echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/pirobox.css" type="text/css" />'.CRLT; ?>
  
 	<?php echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>'.CRLT; ?>
-	<?php echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/pirobox.min.js"></script>'.CRLT; ?>
 		
-	<script type="text/javascript"> 
-	$(document).ready(function(){
-		$().piroBox({
-			my_speed: 400,
-			bg_alpha: 0.1,
-			slideShow: true,
-			slideSpeed: 4,
-			close_all: '.piro_close,.piro_overlay'
-			});
-	});
-	</script> 
 	<script type="text/javascript"> 
 		var _gaq = _gaq || [];
 		_gaq.push(['_setAccount', 'UA-17193616-1']);
@@ -52,9 +39,8 @@
 				<?php for($i = 0;$i < count($albums);$i++): ?>
 					<div class="grid_5 photo-album">
 						<div class="album-background">
-						<?php $text='<img class="album-main-photo"
-								src="'.$pagevalue['baseurl'].$albums[$i]['alb_image'].'"
-								title="'.$albums[$i]['alb_image_title'].'"/>'; ?>
+						<?php $text='<img class="album-main-photo" src="'.$pagevalue['baseurl'].'album/viewimage/'.$albums[$i]['alb_id'].'"
+									alt="'.$albums[$i]['alb_photo_title'].'"/>'; ?>
 						<?php $link = 'photo-albums/photo-gallery/'.$albums[$i]['alb_id']; ?>
 						<?php echo anchor($link,$text); ?>
 						</div>

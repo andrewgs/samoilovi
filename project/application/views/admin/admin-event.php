@@ -39,7 +39,7 @@
 					<a href="<?php echo $pagevalue['baseurl'].$pagevalue['backpath']; ?>">&nbsp;&larr;&nbsp; Вернуться назад</a>
 				</div>
 				<div id="internal_nav" class="grid_4">
-					<a href="#comment">&nbsp;&nbsp; &ldquo;&nbsp;Оставить комментарий&nbsp;&rdquo;&nbsp;</a>
+					<a href="#comment" style="text-align:center">Оставить комментарий</a>
 				</div>
 				<?php if($msg['status'] == 1):
 					echo '<div class="message">';

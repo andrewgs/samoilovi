@@ -10,10 +10,11 @@ $route['photo-albums'] 						= "home/albums";
 $route['events'] 							= "home/events";
 $route['events/:num'] 						= "home/events";
 $route['event/:num'] 						= "home/event";
-$route['photo-albums/gallery/:num'] 		= "home/photo";
+$route['photo-albums/photo-gallery/:num'] 	= "home/photo";
 $route['about'] 							= "home/about";
 $route['friends'] 							= "home/friends";
 $route['album/viewimage/:num']				= "home/viewimage";
+$route['friend/viewimage/:num']				= "home/viewimage";
 $route['small/viewimage/:num']				= "home/viewimage";
 $route['big/viewimage/:num']				= "home/viewimage";
 
@@ -39,13 +40,14 @@ $route['admin/album-gallary']				= "admin/albums";
 $route['admin/album-new']					= "admin/albumnew";
 $route['admin/album-edit/:num'] 			= "admin/albumedit";
 $route['admin/album-destroy/:num'] 			= "admin/albumdestroy";
-
 $route['admin/photo-gallary/:num']			= "admin/photos";
 $route['admin/photo-destory/:num']			= "admin/photodestroy";
 $route['admin/photo-multiupload']			= "admin/multiupload";
-
 $route['admin/friends']						= "admin/friends";
 $route['admin/friend-new']					= "admin/friendnew";
+$route['admin/friend-edit/:num']			= "admin/friendedit";
+$route['admin/friend-destroy/:num']			= "admin/frienddestroy";
+$route['admin/profile']						= "admin/profile";
 
 //other
 $route[':any']			 = "home/page404";

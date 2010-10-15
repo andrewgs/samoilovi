@@ -47,7 +47,7 @@
 			<?php for($y = 0;$y < 3;$y++): ?>	
 				<div class="grid_5 vcard">
 					<div class="friend-info left">
-					<?php '<img src="'.$pagevalue['baseurl'].'friend/viewimage/'.$friendcard[$i][$y]['id'].'"
+					<?php echo '<img src="'.$pagevalue['baseurl'].'friend/viewimage/'.$friendcard[$i][$y]['id'].'"
 									alt="'.$friendcard[$i][$y]['name'].'"/>'; ?>
 					</div>
 					<div class="friend-specs left">
@@ -59,9 +59,9 @@
 						</div>
 					<?php if($friendcard[$i][$y]['social'] != 0):?>
 							<div class="friend-social">
-						<?php for($soc = 0;$soc < count($soc); $soc++):
+						<?php for($soc = 0;$soc < count($social); $soc++):
 								if ($social[$soc]['soc_fr_id'] == $friendcard[$i][$y]['id'])	
-									echo anchor($social[$soc]['soc_href'],$social[$soc]['soc_name'],array('target'=>'_blank')).'&nbsp;&nbsp;';
+									echo anchor($social[$soc]['soc_href'],$social[$soc]['soc_name'],array('target'=>'_blank')).' ';
 							endfor; ?>
 							</div>
 					<?php endif; ?>						
@@ -73,10 +73,10 @@
 					</div>
 					<div class="friend-controls">
 					<?php $text = 'Редактировать'; ?>
-					<?php $str_uri = '/admin/friendedit/'.$friendcard[$i][$y]['id'];?>
-					<?php anchor($str_uri,$text); ?>
+					<?php $str_uri = 'admin/friend-edit/'.$friendcard[$i][$y]['id'];?>
+					<?php echo anchor($str_uri,$text); ?>
 					<?php $text = ' Удалить'; ?>
-					<?php $str_uri = '/admin/frienddestroy/'.$friendcard[$i][$y]['id']; ?>
+					<?php $str_uri = '/admin/friend-destroy/'.$friendcard[$i][$y]['id']; ?>
 					<?php $attr = array('class'=>'delete'); ?>
 					<?php echo anchor($str_uri,$text,$attr); ?>
 					</div>

@@ -20,11 +20,13 @@
 			return $query->result_array();
 		}
 		
-		function get_friend_info($id){
+		function friend_record($id){
 		
 			$this->db->where('fr_id',$id);
-			$query = $this->db->get('friends', 1);
-			return $query->result();
+			$query = $this->db->get('friends',1);
+			$data = $query->result_array();
+			if(isset($data[0])) return $data[0];
+			return NULL;
 		}
 		
 		function get_image($friend_id){
@@ -36,46 +38,44 @@
 			return $data[0]['fr_image'];
 		}
 		
-		function insert_record_to_friends($data,$social){
+		function insert_record($data){
 			
-			$this->fr_name = $data['name'];
-			$this->fr_profession = $data['profession'];
-			$this->fr_social = $social;
-			$this->fr_image = $data['userfile'];
-			$this->fr_note = $data['note'];
-			
-			if (strlen($this->fr_note) > 450)
-				$this->fr_note = substr($this->fr_note,0,450);				
+			$this->fr_name 			= $data['name'];
+			$this->fr_profession 	= $data['profession'];
+			$this->fr_social 		= $data['social'];
+			$this->fr_image 		= $data['image'];
+			$this->fr_note 			= $data['note'];
+
+			if (mb_strlen($this->fr_note,'UTF-8') > 245)
+				$this->fr_note = mb_substr($this->fr_note,0,245,'UTF-8');	
 			
 			$this->db->insert('friends', $this);
-			$id = $this->db->insert_id();
-			
-			return $id;
+			return $this->db->insert_id();
 		}
 		
-		function delete_record_to_friend($id){
+		function delete_record($id){
 			
-			$this->db->delete('friends', array('fr_id' => $id));
+			$this->db->delete('friends',array('fr_id'=>$id));
 		}
 		
-		function update_record_to_friends($data,$social){
+		function update_record($data){
 			
-			$this->fr_id = $data['fr_id'];
-			$this->fr_name = $data['name'];
-			$this->fr_profession = $data['profession'];
-			$this->fr_social = $social;
-			$this->fr_note = $data['note'];
-			$this->fr_image = $data['userfile'];
+			$this->fr_id 			= $data['id'];
+			$this->fr_name 			= $data['name'];
+			$this->fr_profession 	= $data['profession'];
+			$this->fr_social 		= $data['social'];
+			$this->fr_note 			= $data['note'];
+			$this->fr_image 		= $data['image'];
 			
-			if (strlen($this->fr_note) > 450)
-				$this->fr_note = substr($this->fr_note,0,450);
+			if (mb_strlen($this->fr_note,'UTF-8') > 245)
+				$this->fr_note = mb_substr($this->fr_note,0,245,'UTF-8');
 			
 			$this->db->where('fr_id',$this->fr_id);
-			$this->db->update('friends', $this);
+			$this->db->update('friends',$this);
 		}
 
-		function reset_social_count($id){
-			$this->db->set('fr_social', 0, FALSE);
+		function reset_social($id){
+			$this->db->set('fr_social',0,FALSE);
 			$this->db->where('fr_id',$id);
 			$this->db->update('friends');
 		}

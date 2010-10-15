@@ -40,11 +40,17 @@
    		<?php $this->load->view('header',array('pagevalue'=>$pagevalue)); ?>
 		<div id="content">
 			<div class="container_12">
-				<div id="internal_nav" class="grid_4 suffix_8">
-				<a href="<?php echo $pagevalue['baseurl'].$pagevalue['backpath']; ?>">&laquo; Вернуться назад</a>
+				<div id="internal_nav" class="grid_4">
+					<a href="<?php echo $pagevalue['baseurl'].$pagevalue['backpath']; ?>">&nbsp;&larr;&nbsp; Вернуться назад</a>
+				</div>
+				<div id="internal_nav" class="grid_4">
+					<a href="#comment" style="text-align:center">Оставить комментарий</a>
 				</div>
 			</div>
 			<div class="container_16">
+				<?php echo form_error('user_name').'<div class="clear"></div>'; ?>
+				<?php echo form_error('user_email').'<div class="clear"></div>'; ?>
+				<?php echo form_error('cmnt_text').'<div class="clear"></div>'; ?>
 				<div id="blog" class="grid_16">
 					<div class="blog-top"> 
 						<div class="blog-tl"> </div>
@@ -95,17 +101,16 @@
 			<?php endfor; ?>
 			<div class="container_16">
 				<div id="comment-form-content" class="grid_10 form-content">
-				<?php $attr = array('name'=>'comment-form','id'=>'comment-form','accept-charset'=>'UTF-8'); ?>
-				<?php echo form_open('comment',$attr); ?>
-				<?php echo form_hidden('evnt_id',$this->uri->segment(2)); ?>
+				<a name="comment"></a>
+				<?php echo form_open($pagevalue['formuri']); ?>
+				<?php echo form_hidden('event_id',$this->uri->segment(2)); ?>
 					<div id="edit-name-wrapper" class="form-item">
-					<?php echo form_error('user_name').'<div class="clear"></div>'; ?>
 					<?php echo form_label('Ваше имя: <span title="Это поле обязательно для заполнения." class="form-required">*</span>','edit-name');
 							$attr = array(
 								'name' 		=> 'user_name',
 								'id'   		=> 'username',
 								'value'		=> set_value('user_name'),
-								'maxlength'	=> '255',
+								'maxlength'	=> '60',
 								'size' 		=> '30',
 								'class' 	=> 'form-text required'
 							);
@@ -114,8 +119,7 @@
 					<?php	echo form_input($attr);	?>
 							</div>
 							<div id="edit-mail-wrapper" class="form-item">
-							<?php echo form_error('user_email').'<div class="clear"></div>'; ?>
-					<?php	echo form_label('E-mail: <span title="Это поле обязательно для заполнения." class="form-required">*</span>','edit-mail');
+					<?php echo form_label('E-mail: <span title="Это поле обязательно для заполнения." class="form-required">*</span>','edit-mail');
 							$attr = array(
 								'name' 		=> 'user_email',
 								'id'   		=> 'useremail',
@@ -127,7 +131,10 @@
 							if ($pagevalue['admin'])
 								$attr['value'] = $user['email']; ?>
 					<?php	echo form_input($attr);	?>
-							<div class="description">Содержимое данного поля сохранится в нашей базе данных и не будет выводиться на экран.</div>
+							<div class="description">
+								Содержимое данного поля сохранится в нашей базе данных 
+								и не будет выводиться на экран.
+							</div>
 						</div>
 						<div id="edit-homepage-wrapper" class="form-item">
 						<?php echo form_label('Веб-сайт:','edit-homepage');
@@ -138,12 +145,13 @@
 								'maxlength'	=> '255',
 								'size' 		=> '30',
 								'class' 	=> 'form-text'
-							);?>
+							);
+							if ($pagevalue['admin'])
+								$attr['value'] = 'http://realitygroup.ru/'; ?>
 					<?php echo form_input($attr);?>
 						</div>
 						<div id="edit-comment-wrapper" class="form-item">
-						<?php echo form_error('cmnt_text').'<div class="clear"></div>'; ?>
-					<?php echo form_label('Комментарий: <span title="Это поле обязательно для заполнения." class="form-required">*</span>','edit-comment');?>														
+						<?php echo form_label('Комментарий: <span title="Это поле обязательно для заполнения." class="form-required">*</span>','edit-comment');?>														
 							<div class="resizable-textarea">
 								<span>
 								<?php $attr =array(
@@ -159,12 +167,12 @@
 							</div>
 						</div>
 					<?php $attr =array(
-									'name' 	=> 'op',
-									'id'   	=> 'ajax-comments-submit',
-									'value'	=> 'Добавить комментарий',
-									'class' => 'form-submit'
-								); ?>
-					<?php echo form_submit($attr);?>
+							'name' 	=> 'op',
+							'id'   	=> 'ajax-comments-submit',
+							'value'	=> 'Добавить комментарий',
+							'class' => 'senden'
+						);
+						echo form_submit($attr); ?>
 				<?php echo form_close(); ?>
 				</div>
 				<div class="clear"></div>

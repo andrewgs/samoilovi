@@ -15,14 +15,12 @@
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css" />'.CRLT;
 	
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>';
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.confirm.js"></script>'.CRLT;
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.maxlength-min.js"></script>';
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.maxlength-min.js"></script>'.CRLT;
 ?> 
 	<script type="text/javascript"> 
 		$(document).ready(function(){
 			$("div.blog-content").each(function(){ $(this).parents("div.blog-center:first").css('height',$(this).height()+30); });
-			$('a.delete').confirm();
 			$('#annotation').maxlength({
 					maxCharacters		: 125,
 					status				: true,
