@@ -14,19 +14,21 @@
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/reset.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css" />'.CRLT;
+	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/window.css" type="text/css" />'.CRLT;
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/pirobox.css" type="text/css" />'.CRLT;
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/uploadify.css" type="text/css" />'.CRLT;
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/uploadify.styling.css" type="text/css" />'.CRLT;
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/uploadify.jGrowl.css" type="text/css" />'.CRLT;
 	
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery-1.4.2.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/pirobox.min.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.confirm.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/swfobject.js"></script>'.CRLT;
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.uploadify.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.uploadify.v2.1.0.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.jgrowl_minimized.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery-ui.min.js"></script>'.CRLT;
 ?> 
-	<script type="text/javascript"> 
+	<script type="text/javascript" language="javascript">
 		$(document).ready(function(){
 			$().piroBox({
 				my_speed: 400,
@@ -36,44 +38,37 @@
 				close_all : '.piro_close,.piro_overlay' 
 			});
 			$('a.delete').confirm();
-			$("#showform").click(function(){
-				if ($("fieldset.uploadform").is(":hidden")){
-					$("fieldset.uploadform").slideDown("slow");
-					$("#showform").text('Отменить загрузку');
-					$("#showuploadif").hide(1000);
-				}else{
-					$("fieldset.uploadform").hide(1000);
-					$("#showform").text('Добавить одну фотографию');
-					$("#showuploadif").show(1000);
-				}
-		    });
-			$("#showuploadif").click(function(){
-				if ($("fieldset.multiupload").is(":hidden")){
-					$("fieldset.multiupload").slideDown("slow");
-					$("#showuploadif").text('Отменить загрузку');
-					$("#showform").hide(1000);
-				}else{
-					$("fieldset.multiupload").hide(1000);
-					$("#showuploadif").text('Добавить несколько фотографий');
-					$("#showform").show(1000);
-				}
-		    });
 			$("#fileupload").uploadify({
-					'uploader'		: '<?= $pagevalue['baseurl']; ?>swf/uploadify.swf',
-					'script'		: '<?= $pagevalue['baseurl']; ?>scripts/uploadify.php',/*admin/photo-multiupload',*/
-					'cancelImg'		: '<?= $pagevalue['baseurl']; ?>images/uploadify/cancel.png',
-					'displayData'	: 'speed',
-					'folder'		: '../../../../images/',
-					'buttonImg'		: '<?= $pagevalue['baseurl']; ?>images/uploadify/browseBtn.png',
-					'fileDesc'		: 'Файлы рисунков',
-					'fileExt'		: '*.jpg;*.jpeg;*.png;*.gif',
-					'multi'			: true,
-					'auto'			: true,
-					'rollover'		: true,
-					'height'        : 24,
-					'width'         : 80,
-					'sizeLimit'		: 10485760,
-					onComplete: function (a, b ,c, d, e) {
+					uploader		: "<?php echo $pagevalue['baseurl']; ?>swf/uploadify.swf",
+					script			: "<?php echo $pagevalue['baseurl']; ?>upload",
+					cancelImg		: "<?php echo $pagevalue['baseurl']; ?>images/uploadify/cancel.png",
+					displayData		: "speed",
+					folder			: "images",
+					scriptAccess	: "always",
+					queueSizeLimit	: 5,
+					buttonImg		: "<?php echo $pagevalue['baseurl']; ?>images/uploadify/browseBtn.png",
+					fileDesc		: "Файлы рисунков",
+					fileExt			: "*.jpg;*.jpeg;*.png;*.gif",
+					multi			: true,
+					auto			: true,
+					rollover		: true,
+					height       	: 24,
+					width         	: 80,
+					sizeLimit		: 10485760,
+					onQueueFull : function(){
+                       $.jGrowl("Максимум файлов - 5 шт.",{
+					   		theme: 	'warning',
+							header: 'Вы превысили лимит!',
+							life:	5000,
+							sticky: false
+					   });
+                       return false;
+               		},
+					onSelect: function(){
+						var fshgt = $('fieldset.multiupload').height();
+						$('fieldset.multiupload').css({'height':fshgt+60});
+					},
+					onComplete: function(a, b ,c, d, e) {
 						var size = Math.round(c.size/1024);
 						$.jGrowl('<p></p>'+c.name+' - '+size+'KB', {
 							theme: 	'success',
@@ -81,6 +76,8 @@
 							life:	4000,
 							sticky: false
 						});
+						var fshgt = $('fieldset.multiupload').height();
+						$('fieldset.multiupload').css({'height':fshgt-60});
 					},
 					onCancel: function (a, b, c, d){
 					var msg = "Cancelled uploading: "+c.name;
@@ -90,9 +87,39 @@
 							life:	4000,
 							sticky: false
 						});
+						var fshgt = $('fieldset.multiupload').height();
+						$('fieldset.multiupload').css({'height':fshgt-60});
 					}
-				});
+			});
+		$(function(){
+			$("#singleupload").click(function(){
+				var maskHeight = $(document).height();
+				var maskWidth = $(window).width();
+				$("fieldset.singleuploadform").slideDown("slow");
+				$("#showuploadif").hide(1000);
+				$('#ssuwindow').css({'width':maskWidth,'height':maskHeight});
+				$('#ssuwindow').fadeIn(2000);
+			});
+			$("#closesingleupload").click(function(){
+					$('#ssuwindow').fadeOut("slow",function(){$('#ssuwindow').hide();});
+					$("fieldset.singleuploadform").hide(1000);
+					$("#showuploadif").show(2000);
+			});
+			$("#multiupload").click(function(){
+				var maskHeight = $(document).height();
+				var maskWidth = $(window).width();
+				$("fieldset.multiupload").slideDown("slow");
+				$("#showuploadif").hide(1000);
+				$('#smuwindow').css({'width':maskWidth,'height':maskHeight});
+				$('#smuwindow').fadeIn(2000);
+			});
+			$("#closemultiupload").click(function(){
+					$('#smuwindow').fadeOut("slow",function(){$('#smuwindow').hide();});
+					$("fieldset.multiupload").hide(1000);
+					$("#showuploadif").show(2000);
+			}); 
 		});
+	});
 	</script>  	
 </head>
 <body>
@@ -110,49 +137,60 @@
 					<?php echo form_error('imagetitle').'<div class="clear"></div>'; ?>
 					<?php echo form_error('userfile').'<div class="clear"></div>'; ?>
 					<div class="grid_3">
-						<button id="showform">Добавить одну фотографию</button>
+						<button id="singleupload">Добавить одну фотографию</button>
 					</div>
 					<div class="grid_3">
-						<button id="showuploadif">Добавить несколько фотографий</button>
+						<button id="multiupload">Добавить несколько фотографий</button>
 					</div>
 					<div class="clear"></div>
-					<fieldset class="uploadform">
-						<legend><strong>Загрузка одной фотографии</strong></legend>
-					<?php echo form_open_multipart('admin/photo-gallary/'.$pagevalue['album']);?>
-					<?php echo form_hidden('album',$pagevalue['album']); ?>
-						<?php echo '<div>'.form_label('Описание: ','uploadlabel'); ?>
-						<?php $attr = array(
-								'name'		=> 'imagetitle',
-								'id'  		=> 'imagetitle',
-								'class'		=> 'textfield',
-								'value'		=> set_value('imagetitle'),
-								'maxlength'	=> '100',
-								'size' 		=> '30'
-							);
-							echo form_input($attr).'</div>';?>
-						<?php echo '<div>'.form_label('Фото: ','albumlabel'); ?>
-						<?php $attr = array(
-								'type'		=> 'file',
-								'name'		=> 'userfile',
-								'id'		=> 'uploadimage',
-								'accept'	=> 'image/jpeg,png,gif',
-						);
-						echo form_input($attr).'</div>'; ?>
-						<hr>
-						<?php $attr =array(
-								'name' 		=> 'btnsubmit',
-								'id'   		=> 'btnsubmit',
-								'class' 	=> 'senden',
-								'value'		=> 'Загрузить'
-							);
-						echo form_submit($attr);?>							
-					<?php echo form_close(); ?>
-					</fieldset>
-					<fieldset class="multiupload">
-						<legend><strong>Загрузка нескольких фотографий</strong></legend>
-						Выбрать фото:
-						<div id="fileupload">У Вас проблемы с javascript</div> 
-					</fieldset>
+					<div id="ssuwindow"> 	
+						<div id="ssuwindowswidget">
+							<fieldset class="singleuploadform">
+								<legend><strong>Загрузка одной фотографии</strong></legend>
+							<?php echo form_open_multipart('admin/photo-gallary/'.$pagevalue['album']);?>
+							<?php echo form_hidden('album',$pagevalue['album']); ?>
+								<?php echo '<div>'.form_label('Описание: ','uploadlabel'); ?>
+								<?php $attr = array(
+										'name'		=> 'imagetitle',
+										'id'  		=> 'imagetitle',
+										'class'		=> 'textfield',
+										'value'		=> set_value('imagetitle'),
+										'maxlength'	=> '100',
+										'size' 		=> '30'
+									);
+									echo form_input($attr).'</div>';?>
+								<?php echo '<div>'.form_label('Фото: ','albumlabel'); ?>
+								<?php $attr = array(
+										'type'		=> 'file',
+										'name'		=> 'userfile',
+										'id'		=> 'uploadimage',
+										'accept'	=> 'image/jpeg,png,gif',
+								);
+								echo form_input($attr).'</div>'; ?>
+								<hr>
+								<?php $attr =array(
+										'name' 		=> 'btnsubmit',
+										'id'   		=> 'btnsubmit',
+										'class' 	=> 'senden',
+										'value'		=> 'Загрузить'
+									);
+								echo form_submit($attr);?>
+							<?php echo form_close(); ?>
+							<button id="closesingleupload" class="senden">Отменить</button>
+							</fieldset>
+						</div> 
+    				</div>
+					<div id="smuwindow"> 	
+						<div id="smuwindowswidget">
+							<fieldset class="multiupload">
+								<legend><strong>Загрузка нескольких фотографий</strong></legend>
+								Выбрать фото:
+							<?php echo form_upload(array('name'=>'Filedata','id'=>'fileupload'));?>
+							<hr>
+							<button id="closemultiupload" class="senden">Отменить</button>
+							</fieldset>
+						</div> 
+    				</div>
 				</div>
 				<?php if($msg['status'] == 1){
 						echo '<div class="message">';

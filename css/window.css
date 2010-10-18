@@ -1,0 +1,22 @@
+#ssuwindowswidget,
+#smuwindowswidget{
+	position:relative;
+	height:125;
+	width:435px;
+	margin:0 auto;
+	overflow:auto;
+	background:#8c8c8c;
+	border:solid 2px;
+	top:180px;
+	left: -250px;
+	overflow:hidden;
+}
+#smuwindow,
+#ssuwindow {
+  position:fixed;
+  left:0;
+  top:0;
+  z-index:999999;
+  background-color:none;
+  display:none;
+}

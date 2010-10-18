@@ -21,6 +21,7 @@ $route['big/viewimage/:num']				= "home/viewimage";
 // routes - admin;
 $route['admin/login'] 						= "admin/login";
 $route['login'] 							= "admin/login";
+$route['admin/photo-upload']				= "admin/multiupload";
 $route[':any/login']						= "admin/login";
 $route[':any/admin']						= "admin/login";
 $route['admin'] 							= "admin/index";
@@ -42,12 +43,15 @@ $route['admin/album-edit/:num'] 			= "admin/albumedit";
 $route['admin/album-destroy/:num'] 			= "admin/albumdestroy";
 $route['admin/photo-gallary/:num']			= "admin/photos";
 $route['admin/photo-destory/:num']			= "admin/photodestroy";
-$route['admin/photo-multiupload']			= "admin/multiupload";
 $route['admin/friends']						= "admin/friends";
 $route['admin/friend-new']					= "admin/friendnew";
 $route['admin/friend-edit/:num']			= "admin/friendedit";
 $route['admin/friend-destroy/:num']			= "admin/frienddestroy";
 $route['admin/profile']						= "admin/profile";
 
+
+$route['view']								= "upload/index";
+$route['admin/viewapload/:num']				= "admin/show";
+$route['upload'] 							= "upload/uploadify";
 //other
-$route[':any']			 = "home/page404";
+//$route[':any']			 					= "home/page404";

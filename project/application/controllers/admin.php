@@ -434,8 +434,7 @@ class Admin extends Controller{
 					'title' => "Samoilovi.ru | Администрирование | Фоторепортажи",
 					'desc' => "\"\"",
 					'keyword' => "\"\"",
-					'baseurl' => base_url(),
-					'basepath' => getcwd()
+					'baseurl' => base_url()
 				);
 		$this->session->set_userdata('backpage','admin/album-gallary');
 		$msg = $this->setmessage('','','',0);
@@ -600,8 +599,20 @@ class Admin extends Controller{
 	
 	function multiupload(){
 		
-		if (!empty($_FILES)):
+		if (!empty($_FILES)){
+			$tempFile = $_FILES['Filedata']['tmp_name'];
+			$targetPath = $_SERVER['DOCUMENT_ROOT'].$_REQUEST['folder'] . '/';
+			$targetFile = str_replace('//','/',$targetPath).$_FILES['Filedata']['name'];
+			copy($tempFile,$targetFile);
+			if(file_exists($_FILES['Filedata']['tmp_name']) and is_uploaded_file($_FILES['Filedata']['tmp_name'])):
+				unlink(file_exists($_FILES['Filedata']['tmp_name']));
+			endif;
+			return TRUE;
+		}else{
+			redirect('page404');
+		}
 		
+		/*if (!empty($_FILES)):		
 			print_r($_FILES); exit();
 			$image['album']			= $this->uri->segment(3);
 			$album 					= $this->albummodel->album_record($image['album']);
@@ -617,7 +628,7 @@ class Admin extends Controller{
 			$this->session->set_flashdata('operation_saccessfull','При загрузке фотографий произошла ошибка!');
 			redirect('admin/photo-gallary/'.$_POST['album']);
 			return FALSE;
-		endif;
+		endif;*/
 	}
 	
 	function photodestroy(){
@@ -1026,5 +1037,18 @@ class Admin extends Controller{
 		$this->image_lib->resize();
 	}
 	
+	function show($album_id = 0,$error = FALSE){
+		
+		$pagevalue = array(
+					'title' 	=> "Samoilovi.ru | Администрирование | Галлерея",
+					'desc' 		=> "\"\"",
+					'keyword' 	=> "\"\"",
+					'valid'		=> $error,
+					'album'		=> $album_id,
+					'baseurl' 	=> base_url(),
+					'basepath' 	=> getcwd()
+			);
+		$this->load->view('view',array('pagevalue'=>$pagevalue));
 	}
+}
 ?>

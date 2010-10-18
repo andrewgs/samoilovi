@@ -15,13 +15,6 @@
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css" />'.CRLT;
 ?> 
-	<script type="text/javascript"> 
-		$(function(){
-			$("div.blog-content").each(function(){
-				$(this).parents("div.blog-center:first").css('height', $(this).height()+10);
-			});
-		});
-	</script>  	
 </head>
 <body>
 	<div id="main-wrap">

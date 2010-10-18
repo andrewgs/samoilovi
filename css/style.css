@@ -273,8 +273,8 @@ div.lenghtstatus{
 	color:#3a3;
 	border-color:#c7f2c8;
 }
-button#showuploadif,
-button#showform{
+button#multiupload,
+button#singleupload{
 	font: bold 13px/17px Calibri, arial;
 	margin-bottom: 5px;
 	margin-left: -5px;
@@ -285,23 +285,38 @@ button#showform{
 fieldset.multiupload{
 	border: 3px double #b5b5b5;
 	background-color: #5f795b;
-	hight: 250px;
 	padding: 8px;
 	padding-bottom:0px;
 	margin: 5px;
 	display:none;
 	width: 400px;
-	height: 75px;
+	height: 110px;
 }
 
-fieldset.uploadform{
+fieldset.singleuploadform{
 	border: 3px double #b5b5b5;
 	background-color: #5f795b;
-	hight: 250px;
 	padding: 8px;
 	padding-bottom:0px;
 	margin: 5px;
 	display:none;
 	width: 400px;
 	height: 130px;
+}
+
+#closesingleupload {
+	
+	border:0 none;
+	background: #333;
+	color:#f5f5f5;
+	cursor:pointer;
+	position:absolute;
+	left: 115px;
+	top: 103px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;	
+}
+#closesingleupload:hover{
+
+	background: #8D2C2D;
 }
