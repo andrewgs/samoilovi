@@ -49,9 +49,5 @@ $route['admin/friend-edit/:num']			= "admin/friendedit";
 $route['admin/friend-destroy/:num']			= "admin/frienddestroy";
 $route['admin/profile']						= "admin/profile";
 
-
-$route['view']								= "upload/index";
-$route['admin/viewapload/:num']				= "admin/show";
-$route['upload'] 							= "upload/uploadify";
 //other
-//$route[':any']			 					= "home/page404";
+$route[':any']			 					= "home/page404";

@@ -577,8 +577,8 @@ class Admin extends Controller{
 				$this->photos($album_id,TRUE);
 				return FALSE;
 			else:
-				$_POST['big_image'] = $this->resize_img($_FILES,640,480);
-				$_POST['image'] = $this->resize_img($_FILES,186,186);
+				$_POST['big_image'] = $this->resize_img($_FILES['userfile']['tmp_name'],640,480);
+				$_POST['image'] = $this->resize_img($_FILES['userfile']['tmp_name'],186,186);
 				$this->imagesmodel->insert_record($_POST);
 				$this->albummodel->insert_photo($_POST['album']);
 				$this->session->set_flashdata('operation_error',' ');
@@ -598,38 +598,49 @@ class Admin extends Controller{
 	}
 	
 	function multiupload(){
+		$error = "";
+		$msg = "";
+		$fileElementName = 'fileToUpload';
+		$files_count = sizeof($_FILES[$fileElementName]["name"]);
 		
-		if (!empty($_FILES)){
-			$tempFile = $_FILES['Filedata']['tmp_name'];
-			$targetPath = $_SERVER['DOCUMENT_ROOT'].$_REQUEST['folder'] . '/';
-			$targetFile = str_replace('//','/',$targetPath).$_FILES['Filedata']['name'];
-			copy($tempFile,$targetFile);
-			if(file_exists($_FILES['Filedata']['tmp_name']) and is_uploaded_file($_FILES['Filedata']['tmp_name'])):
-				unlink(file_exists($_FILES['Filedata']['tmp_name']));
-			endif;
-			return TRUE;
-		}else{
-			redirect('page404');
-		}
+		for ($i = 0; $i < $files_count-1; $i++):
+			if($_FILES[$fileElementName]['error'][$i] == FALSE):
+				$image['album']			= $_POST['album'];
+				$album 					= $this->albummodel->album_record($image['album']);
+				$image['imagetitle'] 	= $album['alb_photo_title'];
+				$image['big_image'] 	= $this->resize_img($_FILES[$fileElementName]['tmp_name'][$i],640,480);
+				$image['image'] 		= $this->resize_img($_FILES[$fileElementName]['tmp_name'][$i],186,186);
+				$this->imagesmodel->insert_record($image);
+				$this->albummodel->insert_photo($image['album']);
+				move_uploaded_file($_FILES[$fileElementName]['tmp_name'][$i],getcwd()."/upload/" . $_FILES[$fileElementName]['name'][$i]);
+				@unlink($_FILES[$fileElementName][$i]);		
+			endif;		                      
+		endfor;
+	}
+	/*function multiupload(){
 		
-		/*if (!empty($_FILES)):		
-			print_r($_FILES); exit();
-			$image['album']			= $this->uri->segment(3);
-			$album 					= $this->albummodel->album_record($image['album']);
-			$image['imagetitle'] 	= $album['alb_photo_title'];
-			$image['big_image'] 	= $this->resize_img($_FILES,640,480);
-			$image['image'] 		= $this->resize_img($_FILES,186,186);
-			
-			$this->imagesmodel->insert_record($image);
-			$this->albummodel->insert_photo($image['album']);
+		if (!empty($_FILES)):
+			$fileElementName = 'fileToUpload';
+			$files_count = sizeof($_FILES[$fileElementName]["name"]);
+			for ($i = 0; $i < $files_count-1; $i++):
+				if($_FILES[$fileElementName]['error'][$i] == 0):
+					$image['album']			= $_POST['album'];
+					$album 					= $this->albummodel->album_record($image['album']);
+					$image['imagetitle'] 	= $album['alb_photo_title'];
+					$image['big_image'] 	= $this->resize_img($_FILES[$fileElementName]['tmp_name'][$i],640,480);
+					$image['image'] 		= $this->resize_img($_FILES[$fileElementName]['tmp_name'][$i],186,186);
+					$this->imagesmodel->insert_record($image);
+					$this->albummodel->insert_photo($image['album']);
+				endif;
+			endfor;
 		else:
 			$this->session->set_flashdata('operation_error','Отсутствуют данные для загрузки!');
 			$this->session->set_flashdata('operation_message',' ');
 			$this->session->set_flashdata('operation_saccessfull','При загрузке фотографий произошла ошибка!');
 			redirect('admin/photo-gallary/'.$_POST['album']);
 			return FALSE;
-		endif;*/
-	}
+		endif;
+	}*/
 	
 	function photodestroy(){
 			
@@ -955,13 +966,9 @@ class Admin extends Controller{
 		return TRUE;
 	}
 	
-	function resize_img($picture,$wgt,$hgt){
+	function resize_img($tmpName,$wgt,$hgt){
 			
-		$image	 	= $picture['userfile']['name'];
-		$tmpName	= $picture['userfile']['tmp_name'];
-		$fileSize	= $picture['userfile']['size'];
-		
-		chmod($tmpName, 0777);
+		chmod($tmpName,0777);
 		$img = getimagesize($tmpName);		
 		$size_x = $img[0];
 		$size_y = $img[1];

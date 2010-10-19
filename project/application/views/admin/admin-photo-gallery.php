@@ -14,19 +14,14 @@
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/reset.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/960.css" type="text/css" />'.CRLT; 
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/style.css" type="text/css" />'.CRLT;
-	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/window.css" type="text/css" />'.CRLT;
 	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/pirobox.css" type="text/css" />'.CRLT;
-	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/uploadify.css" type="text/css" />'.CRLT;
-	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/uploadify.styling.css" type="text/css" />'.CRLT;
-	echo '<link rel="stylesheet" href="'.$pagevalue['baseurl'].'css/uploadify.jGrowl.css" type="text/css" />'.CRLT;
 	
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery-1.4.2.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.min.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/pirobox.min.js"></script>'.CRLT;
 	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.confirm.js"></script>'.CRLT;
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/swfobject.js"></script>'.CRLT;
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.uploadify.v2.1.0.js"></script>'.CRLT;
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.jgrowl_minimized.js"></script>'.CRLT;
-	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery-ui.min.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.MultiFile.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.form.js"></script>'.CRLT;
+	echo '<script type="text/javascript" src="'.$pagevalue['baseurl'].'js/jquery.blockUI.js"></script>'.CRLT;
 ?> 
 	<script type="text/javascript" language="javascript">
 		$(document).ready(function(){
@@ -38,88 +33,70 @@
 				close_all : '.piro_close,.piro_overlay' 
 			});
 			$('a.delete').confirm();
-			$("#fileupload").uploadify({
-					uploader		: "<?php echo $pagevalue['baseurl']; ?>swf/uploadify.swf",
-					script			: "<?php echo $pagevalue['baseurl']; ?>upload",
-					cancelImg		: "<?php echo $pagevalue['baseurl']; ?>images/uploadify/cancel.png",
-					displayData		: "speed",
-					folder			: "images",
-					scriptAccess	: "always",
-					queueSizeLimit	: 5,
-					buttonImg		: "<?php echo $pagevalue['baseurl']; ?>images/uploadify/browseBtn.png",
-					fileDesc		: "Файлы рисунков",
-					fileExt			: "*.jpg;*.jpeg;*.png;*.gif",
-					multi			: true,
-					auto			: true,
-					rollover		: true,
-					height       	: 24,
-					width         	: 80,
-					sizeLimit		: 10485760,
-					onQueueFull : function(){
-                       $.jGrowl("Максимум файлов - 5 шт.",{
-					   		theme: 	'warning',
-							header: 'Вы превысили лимит!',
-							life:	5000,
-							sticky: false
-					   });
-                       return false;
-               		},
-					onSelect: function(){
-						var fshgt = $('fieldset.multiupload').height();
-						$('fieldset.multiupload').css({'height':fshgt+60});
-					},
-					onComplete: function(a, b ,c, d, e) {
-						var size = Math.round(c.size/1024);
-						$.jGrowl('<p></p>'+c.name+' - '+size+'KB', {
-							theme: 	'success',
-							header: 'Загрузка выполнена',
-							life:	4000,
-							sticky: false
-						});
-						var fshgt = $('fieldset.multiupload').height();
-						$('fieldset.multiupload').css({'height':fshgt-60});
-					},
-					onCancel: function (a, b, c, d){
-					var msg = "Cancelled uploading: "+c.name;
-						$.jGrowl('<p></p>'+msg,{
-							theme: 	'warning',
-							header: 'Загрузка отменена',
-							life:	4000,
-							sticky: false
-						});
-						var fshgt = $('fieldset.multiupload').height();
-						$('fieldset.multiupload').css({'height':fshgt-60});
-					}
+			$('.MultiFile').MultiFile({ 
+				accept:'jpg|gif|png|',max:5,STRING:{ 
+					remove		:'<img src="<?php echo $pagevalue['baseurl']?>images/cancel.png" height="16" width="16" alt="cancel"/>',
+					file		:'$file', 
+					selected	:'Выбраны: $file', 
+					denied		:'Неверный тип файла: $ext!', 
+					duplicate	:'Этот файл уже выбран:\n$file!' 
+				},
+				afterFileAppend: function(element, value, master_element){
+					var fshgt = $('fieldset.multiupload').height();
+					$('fieldset.multiupload').css({'height':fshgt+20});
+					var topvalue = $('#closemultiupload').css("top").substring(0,$('#closemultiupload').css("top").indexOf("px"));
+					$('#closemultiupload').css({'top':Number(topvalue)+20});
+				},
+				afterFileRemove: function(element, value, master_element){
+					var fshgt = $('fieldset.multiupload').height();
+					$('fieldset.multiupload').css({'height':fshgt-20});
+					var topvalue = $('#closemultiupload').css("top").substring(0,$('#closemultiupload').css("top").indexOf("px"));
+					$('#closemultiupload').css({'top':Number(topvalue)-20});
+				}
+			});		  
+			$("#loading").ajaxStart(function(){$(this).show();}).ajaxComplete(function(){$(this).hide();});
+			$('#uploadForm').ajaxForm({
+				beforeSubmit: function(a,f,o){
+					o.dataType = "html";
+					$('#uploadOutput').html('Загрузка...');
+					var fshgt = $('fieldset.multiupload').height();
+					$('fieldset.multiupload').css({'height':fshgt+20});
+				},
+				success: function(data){
+					$('#uploadOutput').empty();
+					var fshgt = $('fieldset.multiupload').height();
+					$('fieldset.multiupload').css({'height':fshgt-20});
+				}
 			});
-		$(function(){
-			$("#singleupload").click(function(){
-				var maskHeight = $(document).height();
-				var maskWidth = $(window).width();
-				$("fieldset.singleuploadform").slideDown("slow");
-				$("#showuploadif").hide(1000);
-				$('#ssuwindow').css({'width':maskWidth,'height':maskHeight});
-				$('#ssuwindow').fadeIn(2000);
+			$(function(){
+				$("#singleupload").click(function(){
+					var maskHeight = $(document).height();
+					var maskWidth = $(window).width();
+					$("fieldset.singleuploadform").slideDown("slow");
+					$("#showuploadif").hide(1000);
+					$('#ssuwindow').css({'width':maskWidth,'height':maskHeight});
+					$('#ssuwindow').fadeIn(2000);
+				});
+				$("#closesingleupload").click(function(){
+						$('#ssuwindow').fadeOut("slow",function(){$('#ssuwindow').hide();});
+						$("fieldset.singleuploadform").hide(1000);
+						$("#showuploadif").show(2000);
+				});
+				$("#multiupload").click(function(){
+					var maskHeight = $(document).height();
+					var maskWidth = $(window).width();
+					$("fieldset.multiupload").slideDown("slow");
+					$("#showuploadif").hide(1000);
+					$('#smuwindow').css({'width':maskWidth,'height':maskHeight});
+					$('#smuwindow').fadeIn(2000);
+				});
+				$("#closemultiupload").click(function(){
+						$('#smuwindow').fadeOut("slow",function(){$('#smuwindow').hide();});
+						$("fieldset.multiupload").hide(1000);
+						$("#showuploadif").show(2000);
+				}); 
 			});
-			$("#closesingleupload").click(function(){
-					$('#ssuwindow').fadeOut("slow",function(){$('#ssuwindow').hide();});
-					$("fieldset.singleuploadform").hide(1000);
-					$("#showuploadif").show(2000);
-			});
-			$("#multiupload").click(function(){
-				var maskHeight = $(document).height();
-				var maskWidth = $(window).width();
-				$("fieldset.multiupload").slideDown("slow");
-				$("#showuploadif").hide(1000);
-				$('#smuwindow').css({'width':maskWidth,'height':maskHeight});
-				$('#smuwindow').fadeIn(2000);
-			});
-			$("#closemultiupload").click(function(){
-					$('#smuwindow').fadeOut("slow",function(){$('#smuwindow').hide();});
-					$("fieldset.multiupload").hide(1000);
-					$("#showuploadif").show(2000);
-			}); 
 		});
-	});
 	</script>  	
 </head>
 <body>
@@ -184,10 +161,15 @@
 						<div id="smuwindowswidget">
 							<fieldset class="multiupload">
 								<legend><strong>Загрузка нескольких фотографий</strong></legend>
-								Выбрать фото:
-							<?php echo form_upload(array('name'=>'Filedata','id'=>'fileupload'));?>
+							<?php echo form_open_multipart('admin/photo-upload',array('id'=>'uploadForm'));?>
+								<?php echo form_hidden('album',$pagevalue['album']); ?>
+								<img id="loading" src="<?php echo $pagevalue['baseurl']?>images/loading.gif" style="display:none;float:left;"/>
+								<?php echo form_upload(array('name'=>'fileToUpload[]','id'=>'fileToUpload','class'=>'MultiFile'));?>
 							<hr>
+								<?php echo form_submit(array('name'=>'btnsubmit','id'=>'btnsubmit','class'=>'senden','value'=>'Загрузить'));?>
+							<?php echo form_close(); ?>
 							<button id="closemultiupload" class="senden">Отменить</button>
+							<div id="uploadOutput"></div>
 							</fieldset>
 						</div> 
     				</div>
@@ -207,7 +189,7 @@
 						<?php $link = $pagevalue['baseurl'].'big/viewimage/'.$images[$i]['img_id']; ?>
 						<?php $text = '<img src="'.$pagevalue['baseurl'].'small/viewimage/'.$images[$i]['img_id'].'" 
 									alt="'.$images[$i]['img_title'].'" '.'title="'.$images[$i]['img_title'].'"/></a>'; ?>
-						<?php $attr = array('class'=>'pirobox'); ?>
+						<?php $attr = array('class'=>'pirobox','title'=>$images[$i]['img_title']); ?>
 						<?php echo anchor($link,$text,$attr); ?>
 						</div>
 						<div class="images-text"> 
